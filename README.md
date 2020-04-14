@@ -2,10 +2,14 @@
 
 <https://usf-cs360-spring2020.github.io/template-bulma/>
 
-![Profile Image](profile.png)
+Link to final project website: https://usf-cs360-spring2020.github.io/homework3-alexziweiwang/
 
-**Name:** Your Name  
-**Email:** <username@dons.usfca.edu>
+<img src="aw_pic.jpg" width="30%" height="30%">
+
+
+* **Name:** Alex Wang
+* **Email:** <zwang114@dons.usfca.edu>
+
 
 This is a template website using [Bulma](https://bulma.io/), [FontAwesome](https://origin.fontawesome.com/) for icons, and [Github Pages](). Designed to be modified (including this README file).
 
