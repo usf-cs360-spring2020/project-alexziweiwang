@@ -2,7 +2,7 @@
 
 <https://usf-cs360-spring2020.github.io/template-bulma/>
 
-Link to final project website: https://usf-cs360-spring2020.github.io/homework3-alexziweiwang/
+Link to final project website: https://usf-cs360-spring2020.github.io/project-alexziweiwang/
 
 <img src="aw_pic.jpg" width="30%" height="30%">
 
