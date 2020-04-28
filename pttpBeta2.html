@@ -200,8 +200,8 @@
           let hrMap = [];
 
           //Data wrangling ...
-          const csv = "Civic_Art_Collection.csv";
-          d3.csv(csv, recordArtist).then(makeHierarchyArray).then(drawHierarchyGraph);
+  //        const csv = "Civic_Art_Collection.csv";
+//          d3.csv(csv, recordArtist).then(makeHierarchyArray).then(drawHierarchyGraph);
 
           function recordArtist(row) {
             artistName = row['Artist'];
@@ -244,81 +244,6 @@
           }
 
 
-          function makeHierarchyArray(map) {
-            hrData.push({
-              name : 'material',
-              children : hrMap.keys(),
-              parent : ''
-            });
-            console.log("map: " + hrMap.keys());
-            for(var k in hrMap) {
-        //      console.log("key: " + k + ", v: " + hrMap[k]);
-              hrData.push({
-                name : k,
-                children : hrMap[k],
-                parent : 'material'
-              });
-
-            }
-    //        console.log("hierarchy data: " + hrData);
-
-            root = d3.stratify()
-            .id(function(row) { return row.name; })
-            .parentId(function(row) {
-              return row.parent;
-            })
-            (hrData);
-            console.log(root);
-
-            return root;
-          }
-
-          function tree() { d3.cluster()
-            .size([2 * Math.PI, radius - 100])
-          }
-
-          function drawHierarchyGraph(data) {
-  //          const root = d3.tree(d3.hierarchy(data)
-  //    data.sort((a, b) => d3.ascending(a.height, b.height) || d3.ascending(a.data.name, b.data.name));
-  const root = tree(bilink(data
-.sort((a, b) => d3.ascending(a.height, b.height) || d3.ascending(a.data.name, b.data.name))));
-
-
-  //    let layout = d3.tree().size([2 * Math.PI, (500 / 2) - 15]);
-
-
-            const node = svg.append("g")
-              .attr("font-family", "sans-serif")
-              .attr("font-size", 10)
-                .selectAll("g")
-                .data(root.leaves())
-                .join("g")
-                    .append("text")
-                    .attr("dy", "0.31em")
-                    .attr("x", d => d.x < Math.PI ? 6 : -6)
-                    .attr("text-anchor", d => d.x < Math.PI ? "start" : "end")
-                    .attr("transform", d => d.x >= Math.PI ? "rotate(180)" : null)
-                    .text(d => d.data.name)  ;
-
-
-          const link = svg.append("g")
-              .attr("stroke", 'blue')
-              .attr("fill", "none")
-            .selectAll("path")
-        //    .data(root.leaves().flatMap(leaf => leaf.outgoing))
-            .data(root.children)
-            .join("path")
-              .style("mix-blend-mode", "multiply")
-              .attr("d", ([i, o]) => line(i.path(o)))
-              .each(function(d) { d.path = this; });
-
-          return svg.node();
-
-
-
-
-
-          }
 
 
           function line() {
@@ -332,22 +257,6 @@
           function id(node) {
             return `${node.parent ? id(node.parent) + "." : ""}${node.data.name}`;
           }
-
-
-
-
-
-          function bilink(root) {
-            const map = new Map(root.leaves().map(d => [id(d), d]));
-            for (const d of root.leaves()) d.incoming = [], d.outgoing = d.data.imports.map(i => [d, map.get(i)]);
-            for (const d of root.leaves()) for (const o of d.outgoing) o[1].incoming.push(o);
-            return root;
-          }
-
-
-
-
-
 
 
 
@@ -468,7 +377,7 @@
 
 
           function drawArtItems(json) {
-
+            console.log(json);
             // loop through and add projected (x, y) coordinates
             // (just makes our d3 code a bit more simple later)
             count = 0;
@@ -497,9 +406,24 @@
               .attr("class", "symbol");
 
 
+              symbolChosen = false;
+              symbols.on("click", function(d) {
+                symbols.style("fill", "black");
+
+                if(symbolChosen == false) {
+                  console.log('clicking symbol... ' + d.medium);
+                  symbols.filter(e => (d.medium !== e.medium)).style("fill", "#e5e5e5").style("fill-opacity", "0.5");
+                  symbolChosen = true;
+                } else {
+                  symbolChosen = false;
+                }
+              });
+
             symbols.on("mouseover", function(d) {
               d3.select(this).raise();
               d3.select(this).classed("active", true);
+              symbols.filter(e => (d.artist == e.artist)).style("fill", "pink").style("fill-opacity", "0.5");
+
 
               // use template literal for the detail table
               // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals
@@ -539,6 +463,9 @@
             });
 
             symbols.on("mouseout", function(d) {
+
+              symbols.style("fill", "black");
+
               d3.select(this).classed("active", false);
               details.style("visibility", "hidden");
             });
@@ -555,12 +482,18 @@
 </script>
 
 
+        <h3>Question: </h3>
+        <p> Is there any clustering of artists that use similar materials as medium of art items and how are the artists connected to each other by such similarity?</p>
+
+        <h3>Answer: </h3>
+        <p> We might need further graph visualization to answer the question, since symbols on the map would be hard to see relationships like connections among them.</p>
+
         <h3>Encoding: </h3>
-        <p> In this map visualization, each symbol on the map represents the position of an art item.
+        <p> In this map visualization, each symbol on the map represents the position of an art item. When hovering on a symbol, all the pink symbol means those art items are created by the same artist; when clicking on a symbol, all symbol with art item made from same materials as medium would remain.
         </p>
 
         <h3>Interactivity: </h3>
-        <p> If the user choose to see a type of medium(material) or an artist on the map, only symbols that are under this category would remain on this geospatial data visualization, and relative edge-bundling graph would also show up.</p>
+        <p> If the user choose to see a type of medium(material) or an artist on the map, only symbols that are under this category would remain on this geospatial data visualization, and relative edge-bundling graph would also show up for presenting relationships among artists.</p>
 
 
 
