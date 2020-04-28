@@ -58,6 +58,17 @@
     text-align: right;
   }
 
+  .node {
+    font: 10px sans-serif;
+  }
+
+  .link {
+    stroke: steelblue;
+    stroke-opacity: 0.5;
+    fill: none;
+    pointer-events: none;
+  }
+
 
  </style>
   </head>
@@ -163,29 +174,12 @@
 
           <figcaption>
             Source: <a href="https://data.sfgov.org/Culture-and-Recreation/Civic-Art-Collection/7rjr-9n9w">Civic Art Collection</a>
-            (<a href="https://data.sfgov.org/Geographic-Locations-and-Boundaries/Analysis-Neighborhoods/p5b7-5n3h">Neighborhoods</a>, <a href="https://data.sfgov.org/Geographic-Locations-and-Boundaries/Streets-Active-and-Retired/3psu-pn9h">Streets</a>)
           </figcaption>
         </figure>
 
         <script src="https://d3js.org/d3.v5.min.js"></script>
 
 <script>
-
-          const urls = {
-            basemap: "https://data.sfgov.org/resource/xfcw-9evu.geojson",
-            streets: "https://data.sfgov.org/resource/3psu-pn9h.geojson?$limit=8000",
-            artItems: "https://data.sfgov.org/resource/7rjr-9n9w.json"
-          };
-
-          // calculate date range
-          const end = d3.timeDay.floor(d3.timeDay.offset(new Date(), -1));
-          const start = d3.timeDay.floor(d3.timeDay.offset(end, -7));
-          const format = d3.timeFormat("%Y-%m-%dT%H:%M:%S");
-          console.log(format(start), format(end));
-
-          urls.artItems = 'https://data.sfgov.org/resource/7rjr-9n9w.json';
-
-          console.log(urls.artItems);
 
           const svg = d3.select("body").select("svg#vis");
 
@@ -201,7 +195,12 @@
 
 
 
-
+          const pad = 14;
+          const diameter = 500;
+          const height = 500;
+          const width = 1260;
+          const r = 5;
+/*
           var diameter = 960,
               radius = diameter / 2,
               innerRadius = radius - 120;
@@ -216,7 +215,7 @@
 
           var link = svg.append("g").selectAll(".link"),
               node = svg.append("g").selectAll(".node");
-
+*/
 
 
 
@@ -224,6 +223,9 @@
           let artistMap = [];
           var hrData = [];
           let hrMap = [];
+          var countMap = [];
+
+          countMap['root'] = 0;
 
           //Data wrangling ...
           const csv = "Civic_Art_Collection.csv";
@@ -252,6 +254,21 @@
               if(hrMap[pd]) {
                 artistNames.forEach(function addCurrMore(p) {
                     hrMap[pd].add(p);
+                    if(countMap[p]) {
+                      count = countMap[p];
+      //                console.log("0" + count);
+
+                      count ++;
+                      countMap[p] = count;
+
+                      mCount = countMap['root'];
+                      mCount ++;
+                      countMap['root'] = mCount;
+                    } else {
+                      countMap[p] = 1;
+                    }
+
+
                 })
 
 
@@ -260,41 +277,89 @@
                 hrMap[pd] = new Set();
                 artistNames.forEach(function addCurrNew(q) {
                     hrMap[pd].add(q);
+                    if(countMap[q]) {
+                      count = countMap[q];
+            //          console.log("1" + count);
+                      count ++;
+                      countMap[q] = count;
+
+                      mCount = countMap['root'];
+                      mCount ++;
+                      countMap['root'] = mCount;
+                    } else {
+                      countMap[q] = 1;
+                    }
+
                 })
 
               }
 
-            });
+
+
+              if(countMap[pd]) {
+                count = countMap[pd];
+    //            console.log("2" + count);
+                count ++;
+                countMap[pd] = count;
+
+              } else {
+                countMap[pd] = 1;
+              }
+            }
+
+
+
+
+            );
             return hrMap;
 
           }
 
 
           function makeHierarchyArray(map) {
-            hrData.push({
-              name : 'material',
-              children : hrMap.keys(),
-              parent : ''
-            });
-            console.log("map: " + hrMap.keys());
+
+//            console.log("map: " + hrMap.keys());
             for(var k in hrMap) {
-        //      console.log("key: " + k + ", v: " + hrMap[k]);
+        //      console.log("key: " + k);
+              const iterator1 = hrMap[k].entries();
+              arr = [];
+              for (let entry of iterator1) {
+                arr.push(entry);
+                hrData.push({
+                  name : entry[0],
+                  parent : k,
+                  count : countMap[entry[0]]
+                });
+
+              }
+
               hrData.push({
                 name : k,
-                children : hrMap[k],
-                parent : 'material'
+                parent : 'root',
+                count : countMap[k]
               });
 
             }
-    //        console.log("hierarchy data: " + hrData);
+
+            //TODO
+            hrData.push({
+              name : 'root',
+              parent : "",
+              count : countMap['root']
+            });
+            //TODO
 
             root = d3.stratify()
             .id(function(row) { return row.name; })
             .parentId(function(row) {
               return row.parent;
-            })
-            (hrData);
+            })(hrData);
+
             console.log(root);
+
+
+
+
 
             return root;
           }
@@ -302,6 +367,23 @@
           function tree() { d3.cluster()
             .size([2 * Math.PI, radius - 100])
           }
+
+          function toCartesian(r, theta) {
+            return {
+              x: r * Math.cos(theta),
+              y: r * Math.sin(theta)
+            };
+          }
+
+
+          function radialLine() {
+            let generator = d3.linkRadial()
+              .angle(d => d.theta + Math.PI / 2) // rotate, 0 angle is mapped differently here
+              .radius(d => d.radial);
+
+            return generator;
+          }
+
 
           function drawHierarchyGraph(data) {
   //          const root = d3.tree(d3.hierarchy(data)
@@ -341,8 +423,11 @@
 
 
 */
-
+/*
   console.log(root);
+  cluster(root);
+console.log(root.leaves());
+
 link = link
     .data(packageImports(root.leaves()))
     .enter().append("path")
@@ -359,10 +444,62 @@ link = link
       .attr("text-anchor", function(d) { return d.x < 180 ? "start" : "end"; })
       .text(function(d) { return d.data.key; });
 
+*/
+
+data.sort(function(a, b) {
+   return b.height - a.height || b.count - a.count;
+ });
+
+ let layout = d3.cluster().size([2 * Math.PI, (diameter / 2) - pad]);
+
+ layout(data);
+
+ data.each(function(node) {
+   node.theta = node.x;
+   node.radial = node.y;
+
+   var point = toCartesian(node.radial, node.theta);
+   node.x = point.x;
+   node.y = point.y;
+ });
+
+
+ let plot = svg.append("g")
+    .attr("id", "plot")
+    .attr("transform", translate(width / 2, height / 2));
+
+//  drawLinks(plot.append("g"), data.links(), radialLine);
+  drawNodes(plot.append("g"), data.descendants(), true);
+
+  return svg.node();
+
+
+
+
 
 
           }
 
+          function drawLinks(g, links, generator) {
+            let paths = g.selectAll('path')
+              .data(links)
+              .enter()
+              .append('path')
+              .attr('d', generator)
+              .attr('class', 'link');
+          }
+
+          function drawNodes(g, nodes, raise) {
+            let circles = g.selectAll('circle')
+              .data(nodes, node => node.data.name)
+              .enter()
+              .append('circle')
+                .attr('r', d => d.r ? d.r : r)
+                .attr('cx', d => d.x)
+                .attr('cy', d => d.y)
+                .attr('id', d => d.data.name)
+                .attr('class', 'node');
+          }
 
           function packageImports(nodes) {
             var map = {},
@@ -495,7 +632,7 @@ Interactivity: Describe your planned interactivity. Use precise visualization te
 
  </p>
 
- 
+
         <h3>Encoding: </h3>
         <p> In this map visualization, each symbol on the map is an art item. Color is the medium of that art as shown in the legend.
         </p>
