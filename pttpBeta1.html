@@ -224,8 +224,14 @@
           var hrData = [];
           let hrMap = [];
           var countMap = [];
+          let layerMap = [];
+          let nodes = new Set();
 
-          countMap['root'] = 0;
+          countMap['Root'] = {};
+          countMap['Root']['name'] = 'Root';
+          countMap['Root']['parent'] = "";
+          countMap['Root']['artCount'] = 0;
+          nodes.add('Root');
 
           //Data wrangling ...
           const csv = "Civic_Art_Collection.csv";
@@ -246,81 +252,70 @@
 
   //          console.log(artistName + " - " + medium);
 
-            mediums.forEach(function addValue(d) {
-
-              pd = d.trim();
-    //          console.log("?? " + pd);
-
-              if(hrMap[pd]) {
-                artistNames.forEach(function addCurrMore(p) {
-                    hrMap[pd].add(p);
-                    if(countMap[p]) {
-                      count = countMap[p];
-      //                console.log("0" + count);
-
-                      count ++;
-                      countMap[p] = count;
-
-                      mCount = countMap['root'];
-                      mCount ++;
-                      countMap['root'] = mCount;
-                    } else {
-                      countMap[p] = 1;
-                    }
+            atSet = new Set();
+            artistNames.forEach(function addCurrNew(ats) {
+              atSet.add(ats);
+            });
 
 
-                })
-
-
-      //          console.log("################# "+hrMap[pd]);
+            mediums.forEach(function addValue(mdm) {
+              m = mdm.trim();
+              nodes.add(m);
+              rootMCount = countMap['Root']['artCount'];
+              rootMCount ++;
+              countMap['Root']['artCount'] = rootMCount;
+              if(countMap[m]) {
+                mCount = countMap[m]['artCount'];
+                mCount ++;
+                countMap[m]['artCount'] = mCount;
               } else {
-                hrMap[pd] = new Set();
-                artistNames.forEach(function addCurrNew(q) {
-                    hrMap[pd].add(q);
-                    if(countMap[q]) {
-                      count = countMap[q];
-            //          console.log("1" + count);
-                      count ++;
-                      countMap[q] = count;
+                countMap[m] = {};
+                countMap[m]['name'] = m;
+                countMap[m]['parent'] = 'Root';
+                countMap[m]['artCount'] = 1;
+              }
 
-                      mCount = countMap['root'];
-                      mCount ++;
-                      countMap['root'] = mCount;
-                    } else {
-                      countMap[q] = 1;
-                    }
+              const iteratorA = atSet.entries();
+              arr = [];
+              for (let entry of iteratorA) {
+                name = entry[0];
 
-                })
+                name = name + "-" + m;
+                nodes.add(name);
+        //        console.log(name);
+                if(countMap[name]) {
+                  nCount = countMap[name]['artCount'];
+                  nCount ++;
+                  countMap[name]['artCount'] = nCount;
+                } else {
+                  countMap[name] = {};
+                  countMap[name]['name'] = name;
+                  countMap[name]['parent'] = m;
+                  countMap[name]['artCount'] = 1;
+                }
+                rootMCount = countMap['Root']['artCount'];
+                rootMCount ++;
+                countMap['Root']['artCount'] = rootMCount;
 
               }
 
-
-
-              if(countMap[pd]) {
-                count = countMap[pd];
-    //            console.log("2" + count);
-                count ++;
-                countMap[pd] = count;
-
-              } else {
-                countMap[pd] = 1;
-              }
-            }
+            });
 
 
 
 
-            );
-            return hrMap;
+
+            return countMap;
 
           }
 
 
-          function makeHierarchyArray(map) {
+          function makeHierarchyArray(data) {
 
-//            console.log("map: " + hrMap.keys());
+            console.log(countMap);
+  /*          console.log("map: " + hrMap.keys());
             for(var k in hrMap) {
-        //      console.log("key: " + k);
+              console.log("key: " + k);
               const iterator1 = hrMap[k].entries();
               arr = [];
               for (let entry of iterator1) {
@@ -335,25 +330,34 @@
 
               hrData.push({
                 name : k,
-                parent : 'root',
+                parent : 'Root',
                 count : countMap[k]
               });
 
             }
+*/
+              i = 0;
+            var array = [];
+            for(var k in countMap) {
 
-            //TODO
-            hrData.push({
-              name : 'root',
-              parent : "",
-              count : countMap['root']
-            });
-            //TODO
+              currName = countMap[k]['name'];
+
+              array.push({
+                name : k,
+                parent : countMap[k]['parent'],
+                artCount : countMap[k]['artCount']
+              });
+
+
+            }
+            console.log(array);
 
             root = d3.stratify()
-            .id(function(row) { return row.name; })
-            .parentId(function(row) {
-              return row.parent;
-            })(hrData);
+              .id(function(row) { return row.name; })
+              .parentId(function(row) {
+                return row.parent;
+              })
+            (array);
 
             console.log(root);
 
@@ -361,7 +365,7 @@
 
 
 
-            return root;
+            return Root;
           }
 
           function tree() { d3.cluster()
@@ -386,7 +390,7 @@
 
 
           function drawHierarchyGraph(data) {
-  //          const root = d3.tree(d3.hierarchy(data)
+  //          const Root = d3.tree(d3.hierarchy(data)
   //    data.sort((a, b) => d3.ascending(a.height, b.height) || d3.ascending(a.data.name, b.data.name));
 //.sort((a, b) => d3.ascending(a.height, b.height) || d3.ascending(a.data.name, b.data.name))));
 
@@ -398,7 +402,7 @@
               .attr("font-family", "sans-serif")
               .attr("font-size", 10)
                 .selectAll("g")
-                .data(root.leaves())
+                .data(Root.leaves())
                 .join("g")
                     .append("text")
                     .attr("dy", "0.31em")
@@ -412,8 +416,8 @@
               .attr("stroke", 'blue')
               .attr("fill", "none")
             .selectAll("path")
-        //    .data(root.leaves().flatMap(leaf => leaf.outgoing))
-            .data(root.children)
+        //    .data(Root.leaves().flatMap(leaf => leaf.outgoing))
+            .data(Root.children)
             .join("path")
               .style("mix-blend-mode", "multiply")
               .attr("d", ([i, o]) => line(i.path(o)))
@@ -424,19 +428,19 @@
 
 */
 /*
-  console.log(root);
-  cluster(root);
-console.log(root.leaves());
+  console.log(Root);
+  cluster(Root);
+console.log(Root.leaves());
 
 link = link
-    .data(packageImports(root.leaves()))
+    .data(packageImports(Root.leaves()))
     .enter().append("path")
       .each(function(d) { d.source = d[0], d.target = d[d.length - 1]; })
       .attr("class", "link")
       .attr("d", line);
 
   node = node
-    .data(root.leaves())
+    .data(Root.leaves())
     .enter().append("text")
       .attr("class", "node")
       .attr("dy", "0.31em")
@@ -584,11 +588,11 @@ data.sort(function(a, b) {
 
 
 
-          function bilink(root) {
-            const map = new Map(root.leaves().map(d => [id(d), d]));
-            for (const d of root.leaves()) d.incoming = [], d.outgoing = d.data.imports.map(i => [d, map.get(i)]);
-            for (const d of root.leaves()) for (const o of d.outgoing) o[1].incoming.push(o);
-            return root;
+          function bilink(Root) {
+            const map = new Map(Root.leaves().map(d => [id(d), d]));
+            for (const d of Root.leaves()) d.incoming = [], d.outgoing = d.data.imports.map(i => [d, map.get(i)]);
+            for (const d of Root.leaves()) for (const o of d.outgoing) o[1].incoming.push(o);
+            return Root;
           }
 
 
@@ -621,33 +625,29 @@ data.sort(function(a, b) {
 
 
 
+
+  <h3>Question: </h3>
+  <p> Is there any clustering of artists that use similar materials as medium of art items and how are the artists connected to each other by such similarity?</p>
+
+  <h3>Answer: </h3>
+  <p> </p>
+
+
+  <h3>Encoding: </h3>
+  <P> The visualization would be in the edge bundling diagram that the leaves would be artists, and parent node would be mediums/materials. Then artists use same kind of mediums/materials would be with bundled edges.</p>
+
+
+  <h3>Interactivity: </h3>
+  <p> If the user choose to see a type of medium(material), all art item under this category would show up on the geospatial data visualization, that the symbols represents position of the art items.</p>
+
   <p>Question: The exact question you are trying to answer with this prototype. Your prototype will be evaluated within the context of this question. For example, "is there a visible pattern of [metric] over [time range]" or "how does [some subcategory] compare to [another subcategory]" are good questions. However, "what [category] has the [largest/smallest] value of [some column]" can be answered with simple statistics and not a good question for visualization. For the best results, you should come up with a question first, then the prototype.
 
-Answer: The answer to the question you were able to learn from the prototype. It is possible your prototype does not do a great job of answering your question---that is a positive result of this exercise. You need to iterate multiple different visualization techniques and designs of a single visualization to reach the final version!
 
-Encoding: Describe how your visualization is encoded. Use precise visualization terminology, including the name of the overall visualization technique and the visual channels you are using to encode the data.
-
-Interactivity: Describe your planned interactivity. Use precise visualization terminology to describe the type of interactivity, and what mouse or keyboard events will trigger that interactivity.
 
 
  </p>
 
 
-        <h3>Encoding: </h3>
-        <p> In this map visualization, each symbol on the map is an art item. Color is the medium of that art as shown in the legend.
-        </p>
-
-        <h3>Potential wrangling: </h3>
-        <p> Since there are many mediums in the raw data, and there are actually groups of same mediums with slight different details, in the future the data could be merged into same large categories of mediums.
-         For example, all the bronze, or all of the steel items could be merged into one larger "bronze" or "steel" group, and further filtering option could help for the subgroups.</p>
-
-         <h3>Potential interactivities: </h3>
-         <p> The symbols on the map could be designed as hovering by and show details such as artist, display titles, creation date and more. </P>
-         <p> There could also be filtering options provided on the website, like by artist, by display, by creation date, or by medium. Then the user could look for art items conditionally.</p>
-
-         <h2>Potential possibilities of other graphs: </h2>
-         <p> There could be another graph according to the user's choice, so that the information of creation date could be applied in a time plot, maybe in a heatmap.</p>
-         <p> As there are relationship of group and subgroup in the column of medium, there is also possibility of making a hierarchy graph. (For example metal -> Steel ->Painted Steel, etc.)</p>
       </div>
       <!-- End page content -->
     </div>
