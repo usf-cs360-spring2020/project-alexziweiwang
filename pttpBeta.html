@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Prototype Page - Beta</title>
+
+    <!-- Load Bulma from CDN (consider saving it to repository instead) -->
+    <!-- https://bulma.io/ -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+
+    <!-- Load Font Awesome 5 (free) icons -->
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+
+
+    <style>
+  #tooltip {
+    font-weight: 600;
+    text-shadow: 0px 0px 2px white;
+
+    fill: orange;
+    stroke: black;
+  }
+
+  path.land {
+    fill: #dddddd;
+    stroke: none;
+  }
+
+  path.neighborhood {
+    fill: none;
+    stroke: white;
+    stroke-width: 3.5px;
+    pointer-events: none;
+  }
+
+  path.street {
+    fill: none;
+    stroke: white;
+    stroke-width: 1px;
+    pointer-events: none;
+  }
+
+  .active {
+    stroke: orange !important;
+    stroke-width: 1.5px !important;
+  }
+
+  circle.symbol {
+    fill-opacity: 0.8;
+
+    stroke: white;
+    stroke-width: 1px;
+  }
+
+  th {
+    text-align: right;
+  }
+
+
+ </style>
+  </head>
+
+  <body>
+
+  <!-- Page header -->
+  <!-- https://bulma.io/documentation/layout/hero/ -->
+  <section class="hero is-info is-bold">
+    <div class="hero-body">
+      <div class="container">
+        <h1 class="title">Prototype Page - Beta</h1>
+        <h2 class="subtitle">Visualization in d3.js</h2>
+      </div>
+    </div>
+  </section>
+  <!-- End page header -->
+
+  <!-- Page navigation -->
+  <!-- https://bulma.io/documentation/components/navbar/ -->
+  <nav class="navbar is-light" role="navigation" aria-label="main navigation">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item is-active" href="index.html">
+          <span class="icon"><i class="fas fa-home"></i></span>
+          <span>Home</span>
+        </a>
+
+        <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="main-menu">
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+        </a>
+      </div>
+
+      <div id="main-menu" class="navbar-menu has-text-weight-medium">
+        <!-- Left navbar items -->
+        <div class="navbar-start">
+          <a class="navbar-item" href="dts.html" title="Data">
+            <span class="icon"><i class="fas fa-table"></i></span>
+            <span>Data</span>
+          </a>
+
+          <div class="navbar-item has-dropdown is-hoverable">
+            <a class="navbar-link">
+              Visualizations
+            </a>
+
+            <div class="navbar-dropdown">
+              <a class="navbar-item" href="pttpAlpha.html">
+                <span class="icon"><i class="fas fa-chart-line"></i></span>
+                <span>Prototype-Alpha: non-proportional symbol map in Tableau</span>
+              </a>
+
+              <a class="navbar-item" href="pttpBeta.html">
+                <span class="icon"><i class="fas fa-chart-line"></i></span>
+                <span>Prototype-Beta: non-proportional symbol map in d3.js</span>
+              </a>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Right navbar items -->
+        <div class="navbar-end">
+          <a class="navbar-item" href="abt.html" title="About">
+            <span class="icon"><i class="fas fa-info-circle"></i></span>
+            <span>About</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <!-- End page navigation -->
+
+  <section class="section">
+    <div class="container">
+      <!-- Begin page content -->
+      <div class="content">
+
+        <h1 class="title">
+          Visualization in d3.js
+        </h1>
+
+        <meta charset="utf-8">
+        <figure>
+          <svg width="1260" height="500" id="vis">
+            <g id="basemap"></g>
+
+            <!-- turn off pointer events for certain groups -->
+            <g id="streets" pointer-events="none"></g>
+            <g id="outline" pointer-events="none"></g>
+
+            <g id="artItems"></g>
+            <g id="tooltip" pointer-events="none"></g>
+            <g id="details" pointer-events="none"></g>
+          </svg>
+
+          <figcaption>
+            Source: <a href="https://data.sfgov.org/Culture-and-Recreation/Civic-Art-Collection/7rjr-9n9w">Civic Art Collection</a>
+            (<a href="https://data.sfgov.org/Geographic-Locations-and-Boundaries/Analysis-Neighborhoods/p5b7-5n3h">Neighborhoods</a>, <a href="https://data.sfgov.org/Geographic-Locations-and-Boundaries/Streets-Active-and-Retired/3psu-pn9h">Streets</a>)
+          </figcaption>
+        </figure>
+
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+
+<script>
+
+          const urls = {
+            basemap: "https://data.sfgov.org/resource/xfcw-9evu.geojson",
+            streets: "https://data.sfgov.org/resource/3psu-pn9h.geojson?$limit=8000",
+            artItems: "https://data.sfgov.org/resource/7rjr-9n9w.json"
+          };
+
+          // calculate date range
+          const end = d3.timeDay.floor(d3.timeDay.offset(new Date(), -1));
+          const start = d3.timeDay.floor(d3.timeDay.offset(end, -7));
+          const format = d3.timeFormat("%Y-%m-%dT%H:%M:%S");
+          console.log(format(start), format(end));
+
+          urls.artItems = 'https://data.sfgov.org/resource/7rjr-9n9w.json';
+
+          console.log(urls.artItems);
+
+          const svg = d3.select("body").select("svg#vis");
+
+          const g = {
+            edgeBunddling: svg.select("g#edgeBunddling"),
+            basemap: svg.select("g#basemap"),
+            streets: svg.select("g#streets"),
+            outline: svg.select("g#outline"),
+            artItems: svg.select("g#artItems"),
+            tooltip: svg.select("g#tooltip"),
+            details: svg.select("g#details")
+          };
+
+
+          let artistMap = [];
+          var hrData = [];
+          let hrMap = [];
+
+          //Data wrangling ...
+          const csv = "Civic_Art_Collection.csv";
+          d3.csv(csv, recordArtist).then(makeHierarchyArray).then(drawHierarchyGraph);
+
+          function recordArtist(row) {
+            artistName = row['Artist'];
+            artistName = artistName.replace(/ and /g, ';');
+            artistName = artistName.replace(/, /g, ';');
+            artistName = artistName.trim();
+            artistNames = artistName.split(";");
+
+            medium = row['Medium'].toLowerCase();;
+            medium = medium.replace(/ and /g, ';');
+            medium = medium.replace(/, /g, ';');
+            medium = medium.trim();
+            mediums = medium.split(';');
+
+  //          console.log(artistName + " - " + medium);
+
+            mediums.forEach(function addValue(d) {
+
+              pd = d.trim();
+    //          console.log("?? " + pd);
+
+              if(hrMap[pd]) {
+                artistNames.forEach(function addCurrMore(p) {
+                    hrMap[pd].add(p);
+                })
+
+
+      //          console.log("################# "+hrMap[pd]);
+              } else {
+                hrMap[pd] = new Set();
+                artistNames.forEach(function addCurrNew(q) {
+                    hrMap[pd].add(q);
+                })
+
+              }
+
+            });
+            return hrMap;
+
+          }
+
+
+          function makeHierarchyArray(map) {
+            hrData.push({
+              name : 'material',
+              children : hrMap.keys(),
+              parent : ''
+            });
+            console.log("map: " + hrMap.keys());
+            for(var k in hrMap) {
+        //      console.log("key: " + k + ", v: " + hrMap[k]);
+              hrData.push({
+                name : k,
+                children : hrMap[k],
+                parent : 'material'
+              });
+
+            }
+    //        console.log("hierarchy data: " + hrData);
+
+            root = d3.stratify()
+            .id(function(row) { return row.name; })
+            .parentId(function(row) {
+              return row.parent;
+            })
+            (hrData);
+            console.log(root);
+
+            return root;
+          }
+
+          function tree() { d3.cluster()
+            .size([2 * Math.PI, radius - 100])
+          }
+
+          function drawHierarchyGraph(data) {
+  //          const root = d3.tree(d3.hierarchy(data)
+  //    data.sort((a, b) => d3.ascending(a.height, b.height) || d3.ascending(a.data.name, b.data.name));
+  const root = tree(bilink(data
+.sort((a, b) => d3.ascending(a.height, b.height) || d3.ascending(a.data.name, b.data.name))));
+
+
+  //    let layout = d3.tree().size([2 * Math.PI, (500 / 2) - 15]);
+
+
+            const node = svg.append("g")
+              .attr("font-family", "sans-serif")
+              .attr("font-size", 10)
+                .selectAll("g")
+                .data(root.leaves())
+                .join("g")
+                    .append("text")
+                    .attr("dy", "0.31em")
+                    .attr("x", d => d.x < Math.PI ? 6 : -6)
+                    .attr("text-anchor", d => d.x < Math.PI ? "start" : "end")
+                    .attr("transform", d => d.x >= Math.PI ? "rotate(180)" : null)
+                    .text(d => d.data.name)  ;
+
+
+          const link = svg.append("g")
+              .attr("stroke", 'blue')
+              .attr("fill", "none")
+            .selectAll("path")
+        //    .data(root.leaves().flatMap(leaf => leaf.outgoing))
+            .data(root.children)
+            .join("path")
+              .style("mix-blend-mode", "multiply")
+              .attr("d", ([i, o]) => line(i.path(o)))
+              .each(function(d) { d.path = this; });
+
+          return svg.node();
+
+
+
+
+
+          }
+
+
+          function line() {
+            d3.lineRadial()
+              .curve(d3.curveBundle.beta(0.85))
+              .radius(d => d.y)
+              .angle(d => d.x)
+          }
+
+
+          function id(node) {
+            return `${node.parent ? id(node.parent) + "." : ""}${node.data.name}`;
+          }
+
+
+
+
+
+          function bilink(root) {
+            const map = new Map(root.leaves().map(d => [id(d), d]));
+            for (const d of root.leaves()) d.incoming = [], d.outgoing = d.data.imports.map(i => [d, map.get(i)]);
+            for (const d of root.leaves()) for (const o of d.outgoing) o[1].incoming.push(o);
+            return root;
+          }
+
+
+
+
+
+
+
+
+
+
+
+
+
+          const tip = g.tooltip.append("text").attr("id", "tooltip");
+          tip.attr("text-anchor", "end");
+          tip.attr("dx", -5);
+          tip.attr("dy", -5);
+          tip.style("visibility", "hidden");
+
+          // add details widget
+          // https://bl.ocks.org/mbostock/1424037
+          const details = g.details.append("foreignObject")
+            .attr("id", "details")
+            .attr("width", 500)
+            .attr("height", 500)
+            .attr("x", 700)
+            .attr("y", 120);
+
+          const body = details.append("xhtml:body")
+            .style("text-align", "left")
+            .style("background", "none")
+            .html("<p>N/A</p>");
+
+          details.style("visibility", "hidden");
+
+          // setup projection
+          // https://github.com/d3/d3-geo#geoConicEqualArea
+          const projection = d3.geoConicEqualArea();
+          projection.parallels([37.692514, 37.840699]);
+          projection.rotate([122, 0]);
+
+          // setup path generator (note it is a GEO path, not a normal path)
+          const path = d3.geoPath().projection(projection);
+
+          d3.json(urls.basemap).then(function(json) {
+            // makes sure to adjust projection to fit all of our regions
+            projection.fitSize([960, 600], json);
+
+            // draw the land and neighborhood outlines
+            drawBasemap(json);
+
+            // now that projection has been set trigger loading the other files
+            // note that the actual order these files are loaded may differ
+            d3.json(urls.streets).then(drawStreets);
+            d3.json(urls.artItems).then(drawArtItems);
+          });
+
+          function drawBasemap(json) {
+            console.log("basemap", json);
+
+            const basemap = g.basemap.selectAll("path.land")
+              .data(json.features)
+              .enter()
+              .append("path")
+              .attr("d", path)
+              .attr("class", "land");
+
+            const outline = g.outline.selectAll("path.neighborhood")
+                .data(json.features)
+                .enter()
+                .append("path")
+                .attr("d", path)
+                .attr("class", "neighborhood")
+                .each(function(d) {
+                  // save selection in data for interactivity
+                  // saves search time finding the right outline later
+                  d.properties.outline = this;
+                });
+
+            // add highlight
+            basemap.on("mouseover.highlight", function(d) {
+              d3.select(d.properties.outline).raise();
+              d3.select(d.properties.outline).classed("active", true);
+            })
+            .on("mouseout.highlight", function(d) {
+              d3.select(d.properties.outline).classed("active", false);
+            });
+
+            // add tooltip
+            basemap.on("mouseover.tooltip", function(d) {
+              tip.text(d.properties.nhood);
+              tip.style("visibility", "visible");
+            })
+            .on("mousemove.tooltip", function(d) {
+              const coords = d3.mouse(g.basemap.node());
+              tip.attr("x", coords[0]);
+              tip.attr("y", coords[1]);
+            })
+            .on("mouseout.tooltip", function(d) {
+              tip.style("visibility", "hidden");
+            });
+          }
+
+          function drawStreets(json) {
+            console.log("streets", json);
+
+            // only show active streets
+            const streets = json.features.filter(function(d) {
+              return d.properties.active;
+            });
+
+            console.log("removed", json.features.length - streets.length, "inactive streets");
+
+            g.streets.selectAll("path.street")
+              .data(streets)
+              .enter()
+              .append("path")
+              .attr("d", path)
+              .attr("class", "street");
+          }
+
+
+
+
+          function drawArtItems(json) {
+
+            // loop through and add projected (x, y) coordinates
+            // (just makes our d3 code a bit more simple later)
+            count = 0;
+            json.forEach(function(d) {
+              if(!isNaN(d.latitude) && !isNaN(d.longitude)) {
+                count++;
+                const latitude = parseFloat(d.latitude);
+                const longitude = parseFloat(d.longitude);
+                const pixels = projection([longitude, latitude]);
+
+                d.x = pixels[0];
+                d.y = pixels[1];
+              } else {
+                d.x = -10;
+                d.y = -10;
+              }
+            });
+
+            const symbols = g.artItems.selectAll("circle")
+              .data(json)
+              .enter()
+              .append("circle")
+              .attr("cx", function(d) { if(!isNaN(d.x))return d.x;})
+              .attr("cy", function(d) { if(!isNaN(d.y))return d.y;})
+              .attr("r", 5)
+              .attr("class", "symbol");
+
+
+            symbols.on("mouseover", function(d) {
+              d3.select(this).raise();
+              d3.select(this).classed("active", true);
+
+              // use template literal for the detail table
+              // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals
+              const html = `
+                <table border="0" cellspacing="0" cellpadding="2">
+                <tbody>
+                <tr>
+                  <th>Accession Number:</th>
+                  <td>${d.accession_number}</td>
+                </tr>
+                <tr>
+                  <th>Display Title:</th>
+                  <td>${d.display_title}</td>
+                </tr>
+                <tr>
+                  <th>Artist:</th>
+                  <td>${d.artist}</td>
+                </tr>
+                <tr>
+                  <th>Creation Date:</th>
+                  <td>${d.creation_date}</td>
+                </tr>
+                <tr>
+                  <th>Medium:</th>
+                  <td>${d.medium}</td>
+                </tr>
+                <tr>
+                  <th>Media & Support:</th>
+                  <td>${d.media_support}</td>
+                </tr>
+
+              </tbody>
+              </table>`;
+
+              body.html(html);
+              details.style("visibility", "visible");
+            });
+
+            symbols.on("mouseout", function(d) {
+              d3.select(this).classed("active", false);
+              details.style("visibility", "hidden");
+            });
+
+
+          }
+
+
+
+
+          function translate(x, y) {
+            return "translate(" + String(x) + "," + String(y) + ")";
+          }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <h3>Encoding: </h3>
+        <p> In this map visualization, each symbol on the map is an art item. Color is the medium of that art as shown in the legend.
+        </p>
+
+        <h3>Potential wrangling: </h3>
+        <p> Since there are many mediums in the raw data, and there are actually groups of same mediums with slight different details, in the future the data could be merged into same large categories of mediums.
+         For example, all the bronze, or all of the steel items could be merged into one larger "bronze" or "steel" group, and further filtering option could help for the subgroups.</p>
+
+         <h3>Potential interactivities: </h3>
+         <p> The symbols on the map could be designed as hovering by and show details such as artist, display titles, creation date and more. </P>
+         <p> There could also be filtering options provided on the website, like by artist, by display, by creation date, or by medium. Then the user could look for art items conditionally.</p>
+
+         <h2>Potential possibilities of other graphs: </h2>
+         <p> There could be another graph according to the user's choice, so that the information of creation date could be applied in a time plot, maybe in a heatmap.</p>
+         <p> As there are relationship of group and subgroup in the column of medium, there is also possibility of making a hierarchy graph. (For example metal -> Steel ->Painted Steel, etc.)</p>
+      </div>
+      <!-- End page content -->
+    </div>
+  </section>
+
+  <!-- Page footer -->
+  <!-- https://bulma.io/documentation/layout/footer/ -->
+  <footer class="footer">
+    <div class="content has-text-centered is-size-7">
+      <p>
+        <a href="#top">
+          <span class="fas fa-arrow-up"></span>
+          <span class="has-text-weight-medium">Back to Top</span>
+        </a>
+      </p>
+
+      <p>
+        <a href="https://github.com/usf-cs360-spring2020/project-alexziweiwang" class="button is-small" style="padding-left: 1em; padding-right: 1em;" target = _blank>
+          <i class="fab fa-github-alt"></i>&nbsp;<strong>Github</strong>
+        </a>
+
+        <a href="https://fontawesome.com/" class="button is-small" style="padding-left: 1em; padding-right: 1em;">
+          <i class="fab fa-font-awesome"></i>&nbsp;<strong>FontAwesome</strong>
+        </a>
+
+        <a href="https://bulma.io" class="button is-small">
+          <img src="https://bulma.io/images/made-with-bulma--semiblack.png" alt="Made with Bulma" width="128" height="24">
+        </a>
+      </p>
+    </div>
+  </footer>
+  <!-- End page footer -->
+  </body>
+
+</html>
