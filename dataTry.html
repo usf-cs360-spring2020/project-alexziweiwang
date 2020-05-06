@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Prototype Page - Beta</title>
+
+    <!-- Load Bulma from CDN (consider saving it to repository instead) -->
+    <!-- https://bulma.io/ -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+
+    <!-- Load Font Awesome 5 (free) icons -->
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+
+
+    <style>
+  #tooltip {
+    font-weight: 600;
+    text-shadow: 0px 0px 2px white;
+
+    fill: orange;
+    stroke: black;
+  }
+
+  path.land {
+    fill: #dddddd;
+    stroke: none;
+  }
+
+  path.neighborhood {
+    fill: none;
+    stroke: white;
+    stroke-width: 3.5px;
+    pointer-events: none;
+  }
+
+  path.street {
+    fill: none;
+    stroke: white;
+    stroke-width: 1px;
+    pointer-events: none;
+  }
+
+  .active {
+    stroke: orange !important;
+    stroke-width: 1.5px !important;
+  }
+
+  circle.symbol {
+    fill-opacity: 0.8;
+
+    stroke: white;
+    stroke-width: 1px;
+  }
+
+  th {
+    text-align: right;
+  }
+
+  .node {
+    font: 10px sans-serif;
+  }
+
+  .link {
+    stroke: steelblue;
+    stroke-opacity: 0.5;
+    fill: none;
+    pointer-events: none;
+  }
+
+
+ </style>
+  </head>
+
+  <body>
+
+  <!-- Page header -->
+  <!-- https://bulma.io/documentation/layout/hero/ -->
+  <section class="hero is-info is-bold">
+    <div class="hero-body">
+      <div class="container">
+        <h1 class="title">Prototype Page - Beta</h1>
+        <h2 class="subtitle">Visualization in d3.js</h2>
+      </div>
+    </div>
+  </section>
+  <!-- End page header -->
+
+  <!-- Page navigation -->
+  <!-- https://bulma.io/documentation/components/navbar/ -->
+  <nav class="navbar is-light" role="navigation" aria-label="main navigation">
+    <div class="container">
+      <div class="navbar-brand">
+        <a class="navbar-item is-active" href="index.html">
+          <span class="icon"><i class="fas fa-home"></i></span>
+          <span>Home</span>
+        </a>
+
+        <a role="button" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="main-menu">
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+        </a>
+      </div>
+
+      <div id="main-menu" class="navbar-menu has-text-weight-medium">
+
+      </div>
+    </div>
+  </nav>
+  <!-- End page navigation -->
+
+  <section class="section">
+    <div class="container">
+      <!-- Begin page content -->
+      <div class="content">
+
+        <h1 class="title">
+          Visualization in d3.js
+        </h1>
+
+        <meta charset="utf-8">
+        <figure>
+          <svg width="1260" height="500" id="vis">
+            <g id="basemap"></g>
+
+            <!-- turn off pointer events for certain groups -->
+            <g id="streets" pointer-events="none"></g>
+            <g id="outline" pointer-events="none"></g>
+
+            <g id="artItems"></g>
+            <g id="tooltip" pointer-events="none"></g>
+            <g id="details" pointer-events="none"></g>
+          </svg>
+
+          <figcaption>
+            Source: <a href="https://data.sfgov.org/Culture-and-Recreation/Civic-Art-Collection/7rjr-9n9w">Civic Art Collection</a>
+          </figcaption>
+        </figure>
+
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+
+<script>
+
+          const svg = d3.select("body").select("svg#vis");
+
+          const g = {
+            edgeBunddling: svg.select("g#edgeBunddling"),
+            basemap: svg.select("g#basemap"),
+            streets: svg.select("g#streets"),
+            outline: svg.select("g#outline"),
+            artItems: svg.select("g#artItems"),
+            tooltip: svg.select("g#tooltip"),
+            details: svg.select("g#details")
+          };
+
+
+
+          const pad = 14;
+          const diameter = 500;
+          const height = 500;
+          const width = 1260;
+          const r = 5;
+/*
+          var diameter = 960,
+              radius = diameter / 2,
+              innerRadius = radius - 120;
+
+          var cluster = d3.cluster()
+              .size([360, innerRadius]);
+
+          var line = d3.radialLine()
+              .curve(d3.curveBundle.beta(0.85))
+              .radius(function(d) { return d.y; })
+              .angle(function(d) { return d.x / 180 * Math.PI; });
+
+          var link = svg.append("g").selectAll(".link"),
+              node = svg.append("g").selectAll(".node");
+*/
+
+
+
+
+          let artistMap = [];
+          var hrData = [];
+          let hrMap = [];
+          var countMap = [];
+          let layerMap = [];
+          let nodes = new Set();
+          let matSet = new Set();
+
+          countMap['Root'] = {};
+          countMap['Root']['name'] = 'Root';
+          countMap['Root']['parent'] = "";
+          countMap['Root']['artCount'] = 0;
+          nodes.add('Root');
+
+          //Data wrangling ...
+          const csv = "artcommision_categorized_material - Civic_Art_Collection.csv";
+          d3.csv(csv, recordMaterial).then(makeDataFormat);
+//.then(makeHierarchyArray).then(drawHierarchyGraph)
+
+          function recordMaterial(row) {
+            var materials = row.MediumMaterial;
+
+            var matArr = materials.split(",");
+            if(materials.length != 0) {
+              index = 0;
+              while (index < matArr.length) {
+                temp = matArr[index];
+                temp = temp.trim();
+                temp = temp.toLowerCase();
+                  matSet.add(temp);
+                  if(temp == "mosaic") {
+                    console.log(row.Artist);
+                  }
+                  index++;
+              }
+            }
+            return matSet;
+
+          }
+
+          function makeDataFormat(data) {
+console.log(matSet);
+
+          }
+
+
+
+
+
+
+
+          function tree() { d3.cluster()
+            .size([2 * Math.PI, radius - 100])
+          }
+
+          function toCartesian(r, theta) {
+            return {
+              x: r * Math.cos(theta),
+              y: r * Math.sin(theta)
+            };
+          }
+
+          function radialLine() {
+            let generator = d3.linkRadial()
+              .angle(d => d.theta + Math.PI / 2) // rotate, 0 angle is mapped differently here
+              .radius(d => d.radial);
+
+            return generator;
+          }
+
+          function line() {
+            d3.lineRadial()
+              .curve(d3.curveBundle.beta(0.85))
+              .radius(d => d.y)
+              .angle(d => d.x)
+          }
+
+
+          function id(node) {
+            return `${node.parent ? id(node.parent) + "." : ""}${node.data.name}`;
+          }
+
+          function bilink(Root) {
+            const map = new Map(Root.leaves().map(d => [id(d), d]));
+            for (const d of Root.leaves()) d.incoming = [], d.outgoing = d.data.imports.map(i => [d, map.get(i)]);
+            for (const d of Root.leaves()) for (const o of d.outgoing) o[1].incoming.push(o);
+            return Root;
+          }
+
+
+
+
+
+
+
+
+
+
+
+
+
+          function translate(x, y) {
+            return "translate(" + String(x) + "," + String(y) + ")";
+          }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h3>Question: </h3>
+  <p> Is there any clustering of artists that use similar materials as medium of art items and how are the artists connected to each other by such similarity?</p>
+
+  <h3>Answer: </h3>
+  <p> </p>
+
+
+  <h3>Encoding: </h3>
+  <P> The visualization would be in the edge bundling diagram that the leaves would be artists, and parent node would be mediums/materials. Then artists use same kind of mediums/materials would be with bundled edges.</p>
+
+
+  <h3>Interactivity: </h3>
+  <p> If the user choose to see a type of medium(material) or an artist on the map, only symbols that are under this category would remain on this geospatial data visualization, and relative edge-bundling graph would also show up.</p>
+
+
+
+
+ </p>
+
+
+      </div>
+      <!-- End page content -->
+    </div>
+  </section>
+
+  <!-- Page footer -->
+  <!-- https://bulma.io/documentation/layout/footer/ -->
+  <footer class="footer">
+    <div class="content has-text-centered is-size-7">
+      <p>
+        <a href="#top">
+          <span class="fas fa-arrow-up"></span>
+          <span class="has-text-weight-medium">Back to Top</span>
+        </a>
+      </p>
+
+      <p>
+        <a href="https://github.com/usf-cs360-spring2020/project-alexziweiwang" class="button is-small" style="padding-left: 1em; padding-right: 1em;" target = _blank>
+          <i class="fab fa-github-alt"></i>&nbsp;<strong>Github</strong>
+        </a>
+
+        <a href="https://fontawesome.com/" class="button is-small" style="padding-left: 1em; padding-right: 1em;">
+          <i class="fab fa-font-awesome"></i>&nbsp;<strong>FontAwesome</strong>
+        </a>
+
+        <a href="https://bulma.io" class="button is-small">
+          <img src="https://bulma.io/images/made-with-bulma--semiblack.png" alt="Made with Bulma" width="128" height="24">
+        </a>
+      </p>
+    </div>
+  </footer>
+  <!-- End page footer -->
+  </body>
+
+</html>

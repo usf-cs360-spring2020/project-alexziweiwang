@@ -221,12 +221,9 @@
             medium = medium.trim();
             mediums = medium.split(';');
 
-  //          console.log(artistName + " - " + medium);
-
             mediums.forEach(function addValue(d) {
 
               pd = d.trim();
-    //          console.log("?? " + pd);
 
               if(hrMap[pd]) {
                 artistNames.forEach(function addCurrMore(p) {
@@ -234,7 +231,6 @@
                 })
 
 
-      //          console.log("################# "+hrMap[pd]);
               } else {
                 hrMap[pd] = new Set();
                 artistNames.forEach(function addCurrNew(q) {
@@ -248,9 +244,6 @@
 
           }
 
-
-
-
           function line() {
             d3.lineRadial()
               .curve(d3.curveBundle.beta(0.85))
@@ -258,17 +251,9 @@
               .angle(d => d.x)
           }
 
-
           function id(node) {
             return `${node.parent ? id(node.parent) + "." : ""}${node.data.name}`;
           }
-
-
-
-
-
-
-
 
           const tip = g.tooltip.append("text").attr("id", "tooltip");
           tip.attr("text-anchor", "end");
@@ -378,9 +363,6 @@
               .attr("class", "street");
           }
 
-
-
-
           function drawArtItems(json) {
             console.log(json);
             // loop through and add projected (x, y) coordinates
@@ -409,7 +391,6 @@
               .attr("cy", function(d) { if(!isNaN(d.y))return d.y;})
               .attr("r", 5)
               .attr("class", "symbol");
-
 
               symbolChosen = false;
               symbols.on("click", function(d) {
@@ -475,11 +456,7 @@
               details.style("visibility", "hidden");
             });
 
-
           }
-
-
-
 
           function translate(x, y) {
             return "translate(" + String(x) + "," + String(y) + ")";
