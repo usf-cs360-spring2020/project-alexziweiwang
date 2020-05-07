@@ -183,24 +183,24 @@
 
 
           let matExactMap = {};
+          let mTypeMap = {};
           let materialSet = new Set();
 
           let metalSet = new Set(["bronze", "steel", "gold leaf", "brass", "aluminum", "zinc", "copper", "bronzing powder", "metal", "cast aluminum", "brass tacks", "dutch gold", "copper leaf", "iron", "painted iron", "cast bronze", "gold"]);
-          let mineralSet = new Set(["granite", "terrazzo", "stone tiles", "cast stone", "soil", "lava rock", "stone", "basalt", "travertine", "marble tile", "graphite", "tesserae", "tuff stone", "stone boulder", "charcoal", "mortar",
+          let mineralSet = new Set(["marble","granite", "terrazzo", "stone tiles", "cast stone", "soil", "lava rock", "stone", "basalt", "travertine", "marble tile", "graphite", "tesserae", "tuff stone", "stone boulder", "charcoal", "mortar",
         "crystals", "minerals", "red porphyry", "onyx"]);
           let ecoSet = new Set(["wood", "bone", "horn", "resin", "cotton", "plant", "oil", "wool", "planted earthwork", "wax", "bamboo", "ecological references", "water", "willow", "tule reed"]);
 
-          let dailyLifeSet = new Set(["ink", "cables", "mirror", "video", "lighting", "magnets", "electrical reed switches"
+          let dailyLifeSet = new Set(["ink", "cables", "mirror", "video", "magnets", "electrical reed switches"
           , "photogram", "wire", "egg tempera", "aero plate", "Loudspeakers", "audiobox","electrical wiring",
           "pencil", "paper", "digital print", "buttons", "jewelry", "recycled parking meter heads", "brass saxophones", "steel music panels", "shade cloth", "controller", "mirrors","motors","electronics","recycled mirrors", "annotated library cards"]);
 
-          let architectureSet = new Set(["slate", "asphalt","unknown", "mixed media relief","painted mural", "linoleum", "pigment", "architectural foam", "pigment print", "pastel", "archival pigment print", "cast aggregate", "concrete paving", "mixed media color lino-cut print", "lacquer paint", "foam", "fabric collage", "soffits", "land scaping", "lino-cut print", "cement", "polyurethane foam",
+          let architectureSet = new Set(["paint", "mixed medium","plastic","led lighting","slate", "lighting", "asphalt","unknown", "mixed media relief","painted mural", "linoleum", "pigment", "architectural foam", "pigment print", "pastel", "archival pigment print", "cast aggregate", "concrete paving", "mixed media color lino-cut print", "lacquer paint", "foam", "fabric collage", "soffits", "land scaping", "lino-cut print", "cement", "polyurethane foam",
           "found objects", "plaster", "fresco", "concrete", "mixed media", "neon lighting", "argon lighting", "fluorescent lighting", "lacquer paints", "mirror tile", "abaca paper", "concrete aggregate","laminated glass panels with melting ceramic pigments", "ink with gesso", "led", "mural",
         "photography", "brick", "pipes", "polymer modified gypsum", "sisal rope"]);
 
-          let kilnSet = new Set(["porcelain", "ceramic tile", "clay", "glass", "ceamic beads", "cast glass", "frosted glass", "mosaic tile", "enamel", "ceramic tiles", "ceramic", "gilding", "glazes", "enamel paint", "terracotta tile", "glass tiles", "glazed ceramic"
+          let kilnSet = new Set(["porcelain enamel","paint","porcelain", "ceramic tile", "clay", "glass", "ceamic beads", "cast glass", "frosted glass", "mosaic tile", "enamel", "ceramic tiles", "ceramic", "gilding", "glazes", "enamel paint", "terracotta tile", "glass tiles", "glazed ceramic"
         ,"tiles", "crockery", "grout", "basaltic clay", "glass mosaic tile", "gfrc tile", "tile", "mosaic tiles", "glass mosaic", "laminated digital print", "polyurethane paint"]);
-          let mTypeMap = {};
 
 //metalSet, mineralSet, ecoSet, dailyLifeSet, architectureSet, kilnSet
 
@@ -278,8 +278,65 @@
                     'Material Type': mType
                   });
                   matExactMap[temp] = currMatList;
-
                 }
+
+                if(mTypeMap[mType]) {
+                  typeSubMap = mTypeMap[mType];
+                  if(typeSubMap[temp]) {
+                    itemList = typeSubMap[temp];
+                    itemList.push({
+                      'Material': temp,
+                      'Artist': artist,
+                      'Completion Year': date,
+                      'Accession Number': acsNumber,
+                      'MediumDetail': mediumDetail,
+                      'DisplayTitle': displayTitle,
+                      'Latitude': latitude,
+                      'Longitude': longitude,
+                      'Material Type': mType
+
+                    })
+                    typeSubMap[temp]= itemList;
+                  } else {
+                    itemList = [];
+                    itemList.push({
+                      'Material': temp,
+                      'Artist': artist,
+                      'Completion Year': date,
+                      'Accession Number': acsNumber,
+                      'MediumDetail': mediumDetail,
+                      'DisplayTitle': displayTitle,
+                      'Latitude': latitude,
+                      'Longitude': longitude,
+                      'Material Type': mType
+
+                    })
+                    typeSubMap[temp]= itemList;
+
+                  }
+                  mTypeMap[mType] = typeSubMap;
+
+                } else {
+                  typeSubMap = {};
+                  typeSubMap[temp] = [];
+
+                  itemList = [];
+                  itemList.push({
+                    'Material': temp,
+                    'Artist': artist,
+                    'Completion Year': date,
+                    'Accession Number': acsNumber,
+                    'MediumDetail': mediumDetail,
+                    'DisplayTitle': displayTitle,
+                    'Latitude': latitude,
+                    'Longitude': longitude,
+                    'Material Type': mType
+
+                  })
+                  typeSubMap[temp] = itemList;
+                  mTypeMap[mType] = typeSubMap;
+                }
+
 
                 index++;
               }
@@ -291,6 +348,9 @@
           function makeDataFormat(data) {
 //console.log(materialSet);
 console.log(matExactMap);
+console.log(mTypeMap);
+
+
 
           }
 
