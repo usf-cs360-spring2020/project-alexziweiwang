@@ -16,6 +16,10 @@
 
     <style>
 
+  #ResetButton {
+    font-size: 12px;
+  }
+
   #YearIntercalSelectButton {
     font-size: 16px;
   }
@@ -175,11 +179,14 @@
             <g id="tooltip" pointer-events="none"></g>
             <g id="details" pointer-events="none"></g>
           </svg>
-          <p font-size = "30px">Filtering options:
-          <select id="YearIntercalSelectButton"></select>
-          <select id="MaterialTypeSelectButton"></select>
+          <p font-size = "30px">
+              <button id="ResetButton" onclick="restButtonClicker()">reset</button>
+              Filtering options:
+              <select id="YearIntercalSelectButton"></select>
+              <select id="MaterialTypeSelectButton"></select>
           <button id="queryButton" onclick="queryButtonClicked()">check art items on the map</button>
-</p>
+
+        </p>
 
           <figcaption>
             Source: <a href="https://data.sfgov.org/Culture-and-Recreation/Civic-Art-Collection/7rjr-9n9w">Civic Art Collection</a>
@@ -290,6 +297,8 @@ let bx, by;
           let original = [];
           let processed = [];
           let timeMap = {};
+          let YIMTmap = {};
+          initializeYIMTmap();
           timeMap['architectural material'] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
           timeMap['metal'] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
           timeMap['mineral'] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
@@ -308,7 +317,7 @@ let bx, by;
           nodes.add('kiln product');
           let typeName = ['architectural material', 'metal', 'mineral', 'ecological', 'daily life object', 'kiln product'];
           let yearInterval = ['1811-1835', '1836-1860', '1861-1885', '1886-1910', '1911-1935',
-        '1936-1960', '1961-1985', '1986-2010', '2011-2035', 'unknown'];
+        '1936-1960', '1961-1985', '1986-2010', '2011-2035', 'unknown year'];
           //0: 1811-1835
           //1: 1836-1860
           //2: 1861-1885
@@ -325,7 +334,7 @@ let bx, by;
             .data(yearIntervaoOptions)
             .enter()
             .append('option')
-            .text(function (d) { console.log('??');return d; }) // text showed in the menu
+            .text(function (d) { return d; }) // text showed in the menu
             .attr("value", function (d) { return d; }) // corresponding value returned by the button
 
           let MaterialTypeOptions = ['Select a material type','all','architectural material', 'metal', 'mineral', 'ecological', 'daily life object', 'kiln product'];
@@ -334,9 +343,9 @@ let bx, by;
             .data(MaterialTypeOptions)
             .enter()
             .append('option')
-            .text(function (d) { console.log('??');return d; }) // text showed in the menu
+            .text(function (d) { return d; }) // text showed in the menu
             .attr("value", function (d) { return d; }) // corresponding value returned by the button
-
+//'Select a year interval'  'Select a material type'
           let YearChosen = 'all';
           let MTypeChosen = 'all';
           let hmChosen = false;
@@ -385,8 +394,10 @@ let bx, by;
                 latitude = row.Latitude;
                 longitude = row.Longitude;
                 nbh = row.SFFindNeighborhoods;
+
                 //metalSet, mineralSet, ecoSet, dailyLifeSet, architectureSet, kilnSet
                 timeArrIndex = getTimeIntervalIndex(date);
+                currYearInterval = yearInterval[timeArrIndex];
 
                 if(metalSet.has(temp)) {
                   mType = "metal";
@@ -405,6 +416,15 @@ let bx, by;
                   console.log(temp);
                 }
 
+                setAllMT = YIMTmap['allYI']['all mType'];
+                setAllMT.add(acsNumber);
+                setAllYI = YIMTmap['allYI'][mType];
+                setAllYI.add(acsNumber);
+                setCurrYI = YIMTmap[currYearInterval][mType];
+                setCurrYI.add(acsNumber);
+                setCurrYIallMT = YIMTmap[currYearInterval]['all mType'];
+                setCurrYIallMT.add(acsNumber);
+
                 listTimeCount = timeMap[mType][timeArrIndex];
                 listTimeCount ++;
                 timeMap[mType][timeArrIndex] = listTimeCount;
@@ -421,7 +441,8 @@ let bx, by;
                     'DisplayTitle': displayTitle,
                     'Latitude': latitude,
                     'Longitude': longitude,
-                    'Material Type': mType
+                    'Material Type': mType,
+                    'Year Interval': currYearInterval
                   });
                   matExactMap[temp] = currMatList;
                 } else {
@@ -436,7 +457,8 @@ let bx, by;
                     'DisplayTitle': displayTitle,
                     'Latitude': latitude,
                     'Longitude': longitude,
-                    'Material Type': mType
+                    'Material Type': mType,
+                    'Year Interval': currYearInterval
                   });
                   matExactMap[temp] = currMatList;
                 }
@@ -454,7 +476,8 @@ let bx, by;
                       'DisplayTitle': displayTitle,
                       'Latitude': latitude,
                       'Longitude': longitude,
-                      'Material Type': mType
+                      'Material Type': mType,
+                      'Year Interval': currYearInterval
                     })
                     typeSubMap[temp]= itemList;
                   } else {
@@ -468,7 +491,8 @@ let bx, by;
                       'DisplayTitle': displayTitle,
                       'Latitude': latitude,
                       'Longitude': longitude,
-                      'Material Type': mType
+                      'Material Type': mType,
+                      'Year Interval': currYearInterval
                     })
                     typeSubMap[temp]= itemList;
 
@@ -488,7 +512,8 @@ let bx, by;
                     'DisplayTitle': displayTitle,
                     'Latitude': latitude,
                     'Longitude': longitude,
-                    'Material Type': mType
+                    'Material Type': mType,
+                    'Year Interval': currYearInterval
 
                   })
                   typeSubMap[temp] = itemList;
@@ -507,10 +532,43 @@ let bx, by;
               'DisplayTitle': displayTitle,
               'Latitude': latitude,
               'Longitude': longitude,
-              'Material Type': mType
+              'Material Type': mType,
+              'Year Interval': currYearInterval
             })
             return materialSet;
 
+          }
+
+          function initializeYIMTmap() {
+  //          ['1811-1835', '1836-1860', '1861-1885', '1886-1910', '1911-1935', '1936-1960', '1961-1985', '1986-2010', '2011-2035', 'unknown year']
+            YIMTmap['allYI'] = initializeMTacsSubMap();
+            YIMTmap['1811-1835'] = initializeMTacsSubMap();
+            YIMTmap['1836-1860'] = initializeMTacsSubMap();
+            YIMTmap['1861-1885'] = initializeMTacsSubMap();
+            YIMTmap['1886-1910'] = initializeMTacsSubMap();
+            YIMTmap['1911-1935'] = initializeMTacsSubMap();
+            YIMTmap['1936-1960'] = initializeMTacsSubMap();
+            YIMTmap['1961-1985'] = initializeMTacsSubMap();
+            YIMTmap['1986-2010'] = initializeMTacsSubMap();
+            YIMTmap['2011-2035'] = initializeMTacsSubMap();
+            YIMTmap['unknown year'] = initializeMTacsSubMap();
+            console.log("Completed YIMTmap: ");
+            console.log(YIMTmap);
+          }
+
+          function initializeMTacsSubMap() {
+            //typeName = ['architectural material', 'metal', 'mineral', 'ecological', 'daily life object', 'kiln product'];
+
+            MTacsSubMap = {};
+            MTacsSubMap['all mType'] = new Set();
+            MTacsSubMap['architectural material'] = new Set();
+            MTacsSubMap['metal'] = new Set();
+            MTacsSubMap['mineral'] = new Set();
+            MTacsSubMap['ecological'] = new Set();
+            MTacsSubMap['daily life object'] = new Set();
+            MTacsSubMap['kiln product'] = new Set();
+
+            return MTacsSubMap;
           }
 
 
@@ -523,6 +581,8 @@ let bx, by;
             console.log(timeMap);
             console.log('rawDataPlatTableArr: ');
             console.log(rawDataPlatTableArr);
+            console.log("Completed YIMTmap: ");
+            console.log(YIMTmap);
 
 //metalSet, mineralSet, ecoSet, dailyLifeSet, architectureSet, kilnSet
             allCount = 0; //count of leaves
@@ -704,6 +764,18 @@ function drawAxis(data) {
            }
 
 
+function restButtonClicker() {
+  //'Select a year interval'  'Select a material type'
+  optionYI.property("selected", function(d) {
+    YearChosen = 'all';
+    return d === 'Select a year interval';
+  });
+
+  optionMT.property("selected", function(d) {
+    MTypeChosen = 'all';
+    return d ==='Select a material type';
+  });
+}
 
 
 function queryButtonClicked() {
@@ -738,9 +810,10 @@ function queryButtonClicked() {
 
 console.log("op: year: " + YearChosen);
 console.log("op: material type: " + MTypeChosen);
-requirement[0] = YearChosen;
-requirement[1] = MTypeChosen;
-return requirement
+    requirement[0] = YearChosen;
+    requirement[1] = MTypeChosen;
+    d3.json(urls.artItems).then(drawArtItems);
+    return requirement
 }
 
 function recordOneType(typeSet, matExactMap, original, nodes, typeName) {
@@ -931,7 +1004,28 @@ function getTimeIntervalIndex(year) {
           }
 
           function drawArtItems(json) {
+            d3.selectAll("#allSymbols").remove();
             console.log(json);
+            //if specific requirement, change set, otherwise use the default set...
+            //according to queryReq, change the set range/content
+            let acsSet = new Set();
+            if (YearChosen == 'all') {
+              if(MTypeChosen == 'all') {
+                acsSet = YIMTmap['allYI']['all mType'];
+              } else {
+                acsSet = YIMTmap['allYI'][MTypeChosen];
+              }
+            } else {
+              if(MTypeChosen == 'all') {
+                acsSet = YIMTmap[YearChosen]['all mType'];
+              } else {
+                acsSet = YIMTmap[YearChosen][MTypeChosen];
+              }
+            }
+            console.log("!!!!!!!!!!!!!!!!!!!!!!!current range: ");
+            console.log(YearChosen + ", " + MTypeChosen +": ");
+            console.log(acsSet);
+
             // loop through and add projected (x, y) coordinates
             // (just makes our d3 code a bit more simple later)
             count = 0;
@@ -953,28 +1047,27 @@ function getTimeIntervalIndex(year) {
             const symbols = g.artItems.selectAll("circle")
               .data(json)
               .enter()
+              .filter(d => (acsSet.has(d.accession_number)))
               .append("circle")
+              .attr("id", "allSymbols")
               .attr("cx", function(d) { if(!isNaN(d.x))return d.x;})
               .attr("cy", function(d) { if(!isNaN(d.y))return d.y;})
               .attr("r", 5)
               .attr("class", "symbol");
-            symbols.style("fill", "black");
+    //        symbols.style("fill", "black");
+      //      symbols.filter(d => (acsSet.has(d.AccessionNumber))).style("fill", "pink");
+      //      console.log(d.AccessionNumber);
 
 
-            queryReq = queryButtonClicked();
-            //if specific requirement, change set, otherwise use the default set...
-            //according to queryReq, change the set range/content
-            let nameSet = new Set(['Margrill, Anita and Nagasawa, Nobuho']);
-
-
+/*
             symbolChosen = false;
             symbols.on("click", function(d) {
                 symbols.style("fill", "black");
 
                 if(symbolChosen == false) {
                   console.log('clicking symbol... ' + d.artist);
-                  symbols.filter(e => (nameSet.has(e.artist))).style("fill", "pink");
-                  if(nameSet.has(d.artist)) {
+                  symbols.filter(e => (acsSet.has(e.AccessionNumber))).style("fill", "pink");
+                  if(acsSet.has(d.AccessionNumber)) {
                     console.log("???");
                   }
 
@@ -984,7 +1077,7 @@ function getTimeIntervalIndex(year) {
                   symbolChosen = false;
                 }
             });
-
+*/
 
             symbols.on("mouseover", function(d) {
               d3.select(this).raise();
@@ -1040,6 +1133,8 @@ function getTimeIntervalIndex(year) {
           function translate(x, y) {
             return "translate(" + String(x) + "," + String(y) + ")";
           }
+
+
 </script>
 
 
