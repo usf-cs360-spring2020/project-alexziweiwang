@@ -263,13 +263,6 @@
             return `${node.parent ? id(node.parent) + "." : ""}${node.data.name}`;
           }
 
-
-
-
-
-
-
-
           const tip = g.tooltip.append("text").attr("id", "tooltip");
           tip.attr("text-anchor", "end");
           tip.attr("dx", -5);
@@ -307,7 +300,6 @@
 
             // draw the land and neighborhood outlines
             drawBasemap(json);
-
             // now that projection has been set trigger loading the other files
             // note that the actual order these files are loaded may differ
             d3.json(urls.streets).then(drawStreets);

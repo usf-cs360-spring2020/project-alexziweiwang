@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Prototype Page - Beta</title>
+    <title>Data Trying page</title>
 
     <!-- Load Bulma from CDN (consider saving it to repository instead) -->
     <!-- https://bulma.io/ -->
@@ -80,7 +80,7 @@
   <section class="hero is-info is-bold">
     <div class="hero-body">
       <div class="container">
-        <h1 class="title">Prototype Page - Beta</h1>
+        <h1 class="title">Data Trying page</h1>
         <h2 class="subtitle">Visualization in d3.js</h2>
       </div>
     </div>
@@ -120,6 +120,11 @@
           Visualization in d3.js
         </h1>
 
+        <select id="YearIntercalSelectButton"></select>
+        <select id="MaterialTypeSelectButton"></select>
+        <button id="queryButton" onclick="queryButtonClicked()">check art items on the map</button>
+
+
         <meta charset="utf-8">
         <figure>
           <svg width="1260" height="500" id="vis">
@@ -138,224 +143,638 @@
             Source: <a href="https://data.sfgov.org/Culture-and-Recreation/Civic-Art-Collection/7rjr-9n9w">Civic Art Collection</a>
           </figcaption>
         </figure>
-
         <script src="https://d3js.org/d3.v5.min.js"></script>
-
 <script>
 
-          const svg = d3.select("body").select("svg#vis");
-
-          const g = {
-            edgeBunddling: svg.select("g#edgeBunddling"),
-            basemap: svg.select("g#basemap"),
-            streets: svg.select("g#streets"),
-            outline: svg.select("g#outline"),
-            artItems: svg.select("g#artItems"),
-            tooltip: svg.select("g#tooltip"),
-            details: svg.select("g#details")
+          // configuration of svg/plot area
+          let config = {
+            'svg': {},
+            'margin': {},
+            'plot': {}
           };
 
+          config.svg.height = 900;
+          config.svg.width = 1200; // golden ratio
 
+          config.margin.top = 10;
+          config.margin.right = 30;
+          config.margin.bottom = 30;
+          config.margin.left = 160;
+
+          config.plot.x = config.margin.left - 60;
+          config.plot.y = config.margin.top + 80;
+          config.plot.width = config.svg.width - config.margin.left - config.margin.right;
+          config.plot.height = config.svg.height - config.margin.top - config.margin.bottom - 720;
+
+          // setup svg
+          let svg = d3.select("body").select("svg#vis");
+          svg.attr('width', config.svg.width);
+          svg.attr('height', config.svg.height);
+
+          // setup plot area
+          let plot = svg.append('g');
+          plot.attr('id', 'plot');
+          plot.attr('transform', translate(config.plot.x, config.plot.y));
+
+          // use a rect to illustrate plot area
+          let rect = plot.append('rect');
+          rect.attr('id', 'background');
+
+          rect.attr('x', 0);
+          rect.attr('y', 0);
+          rect.attr('width', config.plot.width);
+          rect.attr('height', config.plot.height);
+
+          // scales for data
+          let scale = {};
+
+          scale.x = d3.scaleBand();
+          scale.x.range([0, config.plot.width]);
+
+          scale.y = d3.scaleBand();
+          scale.y.range([config.plot.height, 0]);
+
+          // https://github.com/d3/d3-scale-chromatic
+          scale.color = d3.scaleSequential(d3.interpolateYlGnBu);
+
+          let axis = {};  // axes for data
+          axis.x = d3.axisBottom(scale.x);
+          axis.x.tickPadding(0);
+
+          axis.y = d3.axisLeft(scale.y);
+          axis.y.tickPadding(0);
+
+          let bcScale = {};
+          let bcAxis = {};
+          let bx, by;
 
           const pad = 14;
           const diameter = 500;
           const height = 500;
           const width = 1260;
           const r = 5;
-/*
-          var diameter = 960,
-              radius = diameter / 2,
-              innerRadius = radius - 120;
 
-          var cluster = d3.cluster()
-              .size([360, innerRadius]);
+                    let matExactMap = {};
+                    let mTypeMap = {};
+                    let materialSet = new Set();
+                    let nodes = new Set();
+                    let original = [];
+                    let processed = [];
+                    let timeMap = {};
+                    timeMap['architectural material'] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+                    timeMap['metal'] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+                    timeMap['mineral'] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+                    timeMap['ecological'] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+                    timeMap['daily life object']  = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+                    timeMap['kiln product'] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+                    let rawDataPlatTableArr = [];
+                    let res = [];
 
-          var line = d3.radialLine()
-              .curve(d3.curveBundle.beta(0.85))
-              .radius(function(d) { return d.y; })
-              .angle(function(d) { return d.x / 180 * Math.PI; });
+                    nodes.add('root');
+                    nodes.add('metal');
+                    nodes.add('mineral');
+                    nodes.add('ecological');
+                    nodes.add('daily life object');
+                    nodes.add('architectural material');
+                    nodes.add('kiln product');
+                    let typeName = ['architectural material', 'metal', 'mineral', 'ecological', 'daily life object', 'kiln product'];
+                    let yearInterval = ['1811-1835', '1836-1860', '1861-1885', '1886-1910', '1911-1935',
+                  '1936-1960', '1961-1985', '1986-2010', '2011-2035', 'unknown'];
+                    //0: 1811-1835
+                    //1: 1836-1860
+                    //2: 1861-1885
+                    //3: 1886-1910
+                    //4: 1911-1935
+                    //5: 1936-1960
+                    //6: 1961-1985
+                    //7: 1986-2010
+                    //8: 2011-2035
+                    let yearIntervaoOptions = ['Select a year interval','all','1811-1835', '1836-1860', '1861-1885', '1886-1910', '1911-1935',
+                  '1936-1960', '1961-1985', '1986-2010', '2011-2035','unknown year'];
+                    var optionYI = d3.select("#YearIntercalSelectButton")
+                      .selectAll('myOptions')
+                      .data(yearIntervaoOptions)
+                      .enter()
+                      .append('option')
+                      .text(function (d) { console.log('??');return d; }) // text showed in the menu
+                      .attr("value", function (d) { return d; }) // corresponding value returned by the button
 
-          var link = svg.append("g").selectAll(".link"),
-              node = svg.append("g").selectAll(".node");
-*/
+                    let MaterialTypeOptions = ['Select a material type','all','architectural material', 'metal', 'mineral', 'ecological', 'daily life object', 'kiln product'];
+                    var optionMT = d3.select("#MaterialTypeSelectButton")
+                      .selectAll('myOptions')
+                      .data(MaterialTypeOptions)
+                      .enter()
+                      .append('option')
+                      .text(function (d) { console.log('??');return d; }) // text showed in the menu
+                      .attr("value", function (d) { return d; }) // corresponding value returned by the button
 
-
-
-
-          let matExactMap = {};
-          let mTypeMap = {};
-          let materialSet = new Set();
-
-          let metalSet = new Set(["bronze", "steel", "gold leaf", "brass", "aluminum", "zinc", "copper", "bronzing powder", "metal", "cast aluminum", "brass tacks", "dutch gold", "copper leaf", "iron", "painted iron", "cast bronze", "gold"]);
-          let mineralSet = new Set(["marble","granite", "terrazzo", "stone tiles", "cast stone", "soil", "lava rock", "stone", "basalt", "travertine", "marble tile", "graphite", "tesserae", "tuff stone", "stone boulder", "charcoal", "mortar",
-        "crystals", "minerals", "red porphyry", "onyx"]);
-          let ecoSet = new Set(["wood", "bone", "horn", "resin", "cotton", "plant", "oil", "wool", "planted earthwork", "wax", "bamboo", "ecological references", "water", "willow", "tule reed"]);
-
-          let dailyLifeSet = new Set(["ink", "cables", "mirror", "video", "magnets", "electrical reed switches"
-          , "photogram", "wire", "egg tempera", "aero plate", "Loudspeakers", "audiobox","electrical wiring",
-          "pencil", "paper", "digital print", "buttons", "jewelry", "recycled parking meter heads", "brass saxophones", "steel music panels", "shade cloth", "controller", "mirrors","motors","electronics","recycled mirrors", "annotated library cards"]);
-
-          let architectureSet = new Set(["paint", "mixed medium","plastic","led lighting","slate", "lighting", "asphalt","unknown", "mixed media relief","painted mural", "linoleum", "pigment", "architectural foam", "pigment print", "pastel", "archival pigment print", "cast aggregate", "concrete paving", "mixed media color lino-cut print", "lacquer paint", "foam", "fabric collage", "soffits", "land scaping", "lino-cut print", "cement", "polyurethane foam",
-          "found objects", "plaster", "fresco", "concrete", "mixed media", "neon lighting", "argon lighting", "fluorescent lighting", "lacquer paints", "mirror tile", "abaca paper", "concrete aggregate","laminated glass panels with melting ceramic pigments", "ink with gesso", "led", "mural",
-        "photography", "brick", "pipes", "polymer modified gypsum", "sisal rope"]);
-
-          let kilnSet = new Set(["porcelain enamel","paint","porcelain", "ceramic tile", "clay", "glass", "ceamic beads", "cast glass", "frosted glass", "mosaic tile", "enamel", "ceramic tiles", "ceramic", "gilding", "glazes", "enamel paint", "terracotta tile", "glass tiles", "glazed ceramic"
-        ,"tiles", "crockery", "grout", "basaltic clay", "glass mosaic tile", "gfrc tile", "tile", "mosaic tiles", "glass mosaic", "laminated digital print", "polyurethane paint"]);
-
-//metalSet, mineralSet, ecoSet, dailyLifeSet, architectureSet, kilnSet
-
-          //Data wrangling ...
-          const csv = "artcommision_categorized_material - Civic_Art_Collection.csv";
-
-          d3.csv(csv, recordMaterial).then(makeDataFormat);
-//.then(makeHierarchyArray).then(drawHierarchyGraph)
-
-          function recordMaterial(row) {
-            var materials = row.MediumMaterial;
-
-            var matArr = materials.split(",");
-            if(materials.length != 0) {
-              index = 0;
-              while (index < matArr.length) {
-                temp = matArr[index];
-                temp = temp.trim();
-                temp = temp.toLowerCase();
-                if(temp == "" || temp.length < 1) {
-                  temp = "unknown";
-                }
-                materialSet.add(temp);
+                    let YearChosen = 'all';
+                    let MTypeChosen = 'all';
+                    let hmChosen = false;
 
 
-                artist = row.Artist;
-                date = row.CreationFinishDate;
-                acsNumber = row.AccessionNumber;
-                mediumDetail = row.MediumDetail;
-                displayTitle = row.DisplayTitle;
-                latitude = row.Latitude;
-                longitude = row.Longitude;
-                nbh = row.SFFindNeighborhoods;
-                //metalSet, mineralSet, ecoSet, dailyLifeSet, architectureSet, kilnSet
+                    let metalSet = new Set(["bronze", "steel", "gold leaf", "brass", "aluminum", "zinc", "copper", "bronzing powder", "metal", "copper leaf", "iron", "gold"]);
+                    let mineralSet = new Set(["marble","granite", "terrazzo", "stone tiles", "cast stone", "soil", "lava rock", "stone", "basalt", "travertine", "graphite", "tesserae", "tuff stone", "stone boulder", "charcoal", "mortar",
+                    "crystals", "minerals", "red porphyry", "onyx"]);
+                    let ecoSet = new Set(["wood", "bone", "horn", "resin", "cotton", "plant", "oil", "wool", "planted earthwork", "wax", "bamboo", "ecological references", "water", "willow", "tule reed"]);
 
-                if(metalSet.has(temp)) {
-                  mType = "Metal";
-                } else if(mineralSet.has(temp)) {
-                  mType = "Mineral";
-                } else if(ecoSet.has(temp)) {
-                  mType = "Ecological";
-                } else if(dailyLifeSet.has(temp)) {
-                  mType = "Daily Life Object";
-                } else if(architectureSet.has(temp)) {
-                  mType = "Architectural Material";
-                } else if(kilnSet.has(temp)) {
-                  mType = "Kiln Product";
-                }
+                    let dailyLifeSet = new Set(["loudspeakers","images","ink", "cables", "mirror", "video", "magnets", "electrical reed switches"
+                    , "photogram", "wire", "egg tempera", "aero plate", "audiobox","electrical wiring",
+                    "pencil", "paper", "digital print", "buttons", "jewelry", "recycled parking meter heads", "brass saxophones", "steel music panels", "shade cloth", "controller", "motors","electronics","recycled mirrors", "annotated library cards"]);
 
-                if(matExactMap[temp]) {
-                  currMatList = matExactMap[temp];
-                  currMatList.push({
-                    'Material': temp,
-                    'Artist': artist,
-                    'Completion Year': date,
-                    'Accession Number': acsNumber,
-                    'MediumDetail': mediumDetail,
-                    'DisplayTitle': displayTitle,
-                    'Latitude': latitude,
-                    'Longitude': longitude,
-                    'Material Type': mType
-                  });
-                  matExactMap[temp] = currMatList;
-                } else {
-                  currMatList = [];
-                  currMatList.push({
-                    'Material': temp,
-                    'Artist': artist,
-                    'Completion Year': date,
-                    'Accession Number': acsNumber,
-                    'MediumDetail': mediumDetail,
-                    'DisplayTitle': displayTitle,
-                    'Latitude': latitude,
-                    'Longitude': longitude,
-                    'Material Type': mType
-                  });
-                  matExactMap[temp] = currMatList;
-                }
+                    let architectureSet = new Set(["pigments","plastic mixture","paint", "mixed medium","plastic","led lighting","slate", "lighting", "asphalt","unknown", "mixed media relief","painted mural", "linoleum", "pigment", "architectural foam", "pigment print", "pastel", "archival pigment print", "cast aggregate", "mixed media color lino-cut print", "lacquer paint", "foam", "fabric collage", "soffits", "land scaping", "lino-cut print", "cement", "polyurethane foam",
+                    "found objects", "plaster", "fresco", "concrete", "mixed media", "neon lighting", "argon lighting", "fluorescent lighting", "lacquer paints", "mirror tile", "abaca paper", "ink with gesso", "led", "mural",
+                    "photography", "brick", "pipes", "polymer modified gypsum", "sisal rope"]);
 
-                if(mTypeMap[mType]) {
-                  typeSubMap = mTypeMap[mType];
-                  if(typeSubMap[temp]) {
-                    itemList = typeSubMap[temp];
-                    itemList.push({
-                      'Material': temp,
-                      'Artist': artist,
-                      'Completion Year': date,
-                      'Accession Number': acsNumber,
-                      'MediumDetail': mediumDetail,
-                      'DisplayTitle': displayTitle,
-                      'Latitude': latitude,
-                      'Longitude': longitude,
-                      'Material Type': mType
+                    let kilnSet = new Set(["glaze","ceramic beads","porcelain enamel","porcelain", "ceramic tile", "clay", "glass", "cast glass", "frosted glass", "mosaic tile", "enamel", "ceramic", "gilding", "enamel paint", "terracotta tile", "glass tiles", "glazed ceramic"
+                    ,"crockery", "grout", "basaltic clay", "glass mosaic tile", "gfrc tile", "tile", "glass mosaic", "laminated digital print", "polyurethane paint"]);
+
+                    const csvMat = "artcommision_categorized_material - Civic_Art_Collection.csv";
+                    d3.csv(csvMat, recordMaterialInfo).then(makeDataFormat).then(drawAxis).then(drawHeatmap);
+                  //.then(drawTitleCaptions);
+
+                    function recordMaterialInfo(row) {
+                      var materials = row.MediumMaterial;
+
+                      var matArr = materials.split(",");
+                      if(materials.length != 0) {
+                        index = 0;
+                        while (index < matArr.length) {
+                          temp = matArr[index];
+                          temp = temp.trim();
+                          temp = temp.toLowerCase();
+                          if(temp == "" || temp.length < 1) {
+                            temp = "unknown";
+                          }
+                          materialSet.add(temp);
+
+                          artist = row.Artist;
+                          date = row.CreationFinishDate;
+                          acsNumber = row.AccessionNumber;
+                          mediumDetail = row.MediumDetail;
+                          displayTitle = row.DisplayTitle;
+                          latitude = row.Latitude;
+                          longitude = row.Longitude;
+                          nbh = row.SFFindNeighborhoods;
+                          //metalSet, mineralSet, ecoSet, dailyLifeSet, architectureSet, kilnSet
+                          timeArrIndex = getTimeIntervalIndex(date);
+
+                          if(metalSet.has(temp)) {
+                            mType = "metal";
+                          } else if(mineralSet.has(temp)) {
+                            mType = "mineral";
+                          } else if(ecoSet.has(temp)) {
+                            mType = "ecological";
+                          } else if(dailyLifeSet.has(temp)) {
+                            mType = "daily life object";
+                          } else if(architectureSet.has(temp)) {
+                            mType = "architectural material";
+                          } else if(kilnSet.has(temp)) {
+                            mType = "kiln product";
+                          } else {
+                            console.log("not having: ");
+                            console.log(temp);
+                          }
+
+                          listTimeCount = timeMap[mType][timeArrIndex];
+                          listTimeCount ++;
+                          timeMap[mType][timeArrIndex] = listTimeCount;
+
+                          if(matExactMap[temp]) {
+
+                            currMatList = matExactMap[temp];
+                            currMatList.push({
+                              'Material': temp,
+                              'Artist': artist,
+                              'Completion Year': date,
+                              'Accession Number': acsNumber,
+                              'MediumDetail': mediumDetail,
+                              'DisplayTitle': displayTitle,
+                              'Latitude': latitude,
+                              'Longitude': longitude,
+                              'Material Type': mType
+                            });
+                            matExactMap[temp] = currMatList;
+                          } else {
+                            currMatList = [];
+
+                            currMatList.push({
+                              'Material': temp,
+                              'Artist': artist,
+                              'Completion Year': date,
+                              'Accession Number': acsNumber,
+                              'MediumDetail': mediumDetail,
+                              'DisplayTitle': displayTitle,
+                              'Latitude': latitude,
+                              'Longitude': longitude,
+                              'Material Type': mType
+                            });
+                            matExactMap[temp] = currMatList;
+                          }
+
+                          if(mTypeMap[mType]) {
+                            typeSubMap = mTypeMap[mType];
+                            if(typeSubMap[temp]) {
+                              itemList = typeSubMap[temp];
+                              itemList.push({
+                                'Material': temp,
+                                'Artist': artist,
+                                'Completion Year': date,
+                                'Accession Number': acsNumber,
+                                'MediumDetail': mediumDetail,
+                                'DisplayTitle': displayTitle,
+                                'Latitude': latitude,
+                                'Longitude': longitude,
+                                'Material Type': mType
+                              })
+                              typeSubMap[temp]= itemList;
+                            } else {
+                              itemList = [];
+                              itemList.push({
+                                'Material': temp,
+                                'Artist': artist,
+                                'Completion Year': date,
+                                'Accession Number': acsNumber,
+                                'MediumDetail': mediumDetail,
+                                'DisplayTitle': displayTitle,
+                                'Latitude': latitude,
+                                'Longitude': longitude,
+                                'Material Type': mType
+                              })
+                              typeSubMap[temp]= itemList;
+
+                            }
+                            mTypeMap[mType] = typeSubMap;
+
+                          } else {
+                            typeSubMap = {};
+
+                            itemList = [];
+                            itemList.push({
+                              'Material': temp,
+                              'Artist': artist,
+                              'Completion Year': date,
+                              'Accession Number': acsNumber,
+                              'MediumDetail': mediumDetail,
+                              'DisplayTitle': displayTitle,
+                              'Latitude': latitude,
+                              'Longitude': longitude,
+                              'Material Type': mType
+
+                            })
+                            typeSubMap[temp] = itemList;
+                            mTypeMap[mType] = typeSubMap;
+                          }
+
+
+                          index++;
+                        }
+                      }
+                      rawDataPlatTableArr.push({
+                        'Artist': artist,
+                        'Completion Year': date,
+                        'Accession Number': acsNumber,
+                        'MediumDetail': mediumDetail,
+                        'DisplayTitle': displayTitle,
+                        'Latitude': latitude,
+                        'Longitude': longitude,
+                        'Material Type': mType
+                      })
+                      return materialSet;
+
+                    }
+
+
+                    function makeDataFormat(data) {
+                      console.log('materialSet: ');
+                      console.log(materialSet);
+                      console.log('mTypeMap: ');
+                      console.log(mTypeMap);
+                      console.log('timeMap: ');
+                      console.log(timeMap);
+                      console.log('rawDataPlatTableArr: ');
+                      console.log(rawDataPlatTableArr);
+
+          //metalSet, mineralSet, ecoSet, dailyLifeSet, architectureSet, kilnSet
+                      allCount = 0; //count of leaves
+
+                      archName = 'architectural material';
+                      typeCount = recordOneType(architectureSet, matExactMap, original, nodes, archName);
+                      allCount = allCount + typeCount;
+
+                      metalName = "metal";
+                      typeCount = recordOneType(metalSet, matExactMap, original, nodes, metalName);
+                      allCount = allCount + typeCount;
+
+                      mineralName = "mineral";
+                      typeCount = recordOneType(mineralSet, matExactMap, original, nodes, mineralName);
+                      allCount = allCount + typeCount;
+
+                      ecoName = "ecological";
+                      typeCount = recordOneType(ecoSet, matExactMap, original, nodes, ecoName);
+                      allCount = allCount + typeCount;
+
+                      dailyName = "daily life object";
+                      typeCount = recordOneType(dailyLifeSet, matExactMap, original, nodes, dailyName);
+                      allCount = allCount + typeCount;
+
+                      kilnName = "kiln product";
+                      typeCount = recordOneType(kilnSet, matExactMap, original, nodes, kilnName);
+                      allCount = allCount + typeCount;
+
+                      console.log(allCount);
+
+                      i = 0;
+                      while(i < 6) {
+                        let oneRow = {};
+                        oneRow.values = [];
+                        count = 0;
+                        type = typeName[i];
+                        oneRow['type'] = type;
+
+                        while(count < 10) {
+                          oneRow.values.push({
+                            'yearInterval': yearInterval[count],
+                            'itemCount': timeMap[type][count],
+                            'index': i
+                          })
+                          count ++;
+                        }
+
+                        res[i] = oneRow;
+                        i ++;
+                      }
+
+                      console.log(res);
+                      return res;
+          }
+
+
+          function drawAxis(data) {
+
+                 console.log(data);
+
+                 // now that we have data set the scale domain
+                 scale.x.domain(yearInterval);
+                 scale.y.domain(typeName);
+
+                 // draw the x and y axis
+                 let gx = svg.append('g');
+                 gx.attr("id", "x-axis");
+                 gx.attr("class", "axis");
+                 plotX = config.plot.x;
+                 plotYH = config.plot.y + config.plot.height;
+
+                 gx.attr('transform', translate(plotX, plotYH));
+                 gx.call(axis.x);
+
+                 let gy = svg.append('g');
+                 gy.attr("id", "y-axis");
+                 gy.attr("class", "axis");
+
+                 plotY = config.plot.y;
+
+                 gy.attr('transform', translate(config.plot.x, config.plot.y));
+                 gy.call(axis.y);
+
+                 // add the options to the button
+
+                 return data;
+               }
+
+
+               function drawHeatmap(data) {
+                  //let typeName = ['architectural material', 'metal', 'mineral', 'ecological', 'daily life object', 'kiln product'];
+
+                  allValues = timeMap['architectural material'].concat(timeMap['metal'],
+                timeMap['mineral'], timeMap['ecological'], timeMap['daily life object'], timeMap['kiln product'])
+
+                  allValues.sort((a,b)=>a-b);
+                  console.log(allValues);
+                  let min = d3.quantile(allValues, 0);
+                  let q1 = d3.quantile(allValues, 0.25);
+                  let median = d3.quantile(allValues, 0.5);
+                  let q3 = d3.quantile(allValues, 0.75);
+                  let max = d3.quantile(allValues, 1);
+
+          //        scale.color.domain([min, q1, median, q3, max]);
+          scale.color.domain([0, d3.max(allValues)]);
+
+                  console.log(min +"; " + q1 + "; " + median + "; " + q3+ "; "+ max);
+
+
+                  // create one group per row
+                  let rows = plot.selectAll("g.cell")
+                         .data(data)
+                         .enter()
+                         .append("g");
+                       rows.attr("class", "cell");
+                       rows.attr("transform", function(d) {
+                         return translate(0, scale.y(d['type']));
+                       });
+
+                       let cells = rows.selectAll("rect")
+                         .data(d => d.values)
+                         .enter()
+                         .append("rect");
+
+                       cells.attr("x", d => scale.x(d.yearInterval));
+                       cells.attr("y", 0); // handled by group transform
+                       cells.attr("width", scale.x.bandwidth());
+                       cells.attr("height", scale.y.bandwidth());
+
+                       // here is the color magic!
+                       cells.style("fill", d => scale.color(d.itemCount));
+
+                       if(YearChosen != 'all' || MTypeChosen != 'all') {
+                         typeIndex = 0;
+                         for(i = 0; i < typeName.length; i++) {
+                           if(typeName[i] == 'MTypeChosen') {
+                             typeIndex = i;
+                           }
+                         }
+                         cells.filter(d.yearInterval !== YearChosen).transition().style("fill", "silver");
+                         cells.filter(d.yearInterval !== YearChosen).transition().style("stroke", "#e5e5e5").style("fill-opacity", "0.5");
+                         cells.filter(d.index !== typeIndex).transition().style("fill", "silver");
+                         cells.filter(d.index !== typeIndex).transition().style("stroke", "#e5e5e5").style("fill-opacity", "0.5");
+                         cells.style("stroke", "gold");
+
+                       }
+
+                       cells.on("mouseover", function(d) {
+                         d3.select(this)
+                           .raise() // bring to front
+                           .style("stroke", "orange")
+                           .style("stroke-width", 5);
+
+                       });
+
+                       cells.on("mouseout", function(d) {
+
+                         d3.select(this).style("stroke", null);
+                       });
+
+                       cells.on("click", function(d) {
+
+                           YearChosen = d.yearInterval;
+                           MTypeChosen = typeName[d.index];
+                           optionYI.property("selected", function(d) {
+                             return d === YearChosen;
+                           });
+
+                           optionMT.property("selected", function(d) {
+                             return d === MTypeChosen;
+                           });
+
+                           console.log("hm: year: " + YearChosen);
+                           console.log("hm: material type: " + MTypeChosen);
+
+                       });
+
+                     }
+
+                     d3.select("#YearIntercalSelectButton").on("change", function(d) {
+                       var selectedYear = d3.select(this).property("value");
+                       if(selectedYear == 'Select a year interval') {
+                         YearChosen = 'all';
+                       } else {
+                         YearChosen = selectedYear;
+                       }
+                       console.log("op CHANGED: year: " + YearChosen);
+
+                     })
+
+
+                     d3.select("#MaterialTypeSelectButton").on("change", function(d) {
+                       var selectedMType = d3.select(this).property("value");
+                       if(selectedMType == 'Select a material type') {
+                         MTypeChosen = 'all';
+                       } else {
+                         MTypeChosen = selectedMType;
+                       }
+                       console.log("op CHANGED: material type: " + MTypeChosen);
 
                     })
-                    typeSubMap[temp]= itemList;
+
+
+          function queryButtonClicked() {
+              //YearIntercalSelectButton
+              //MaterialTypeSelectButton
+
+
+              console.log("query button clicked!!");
+
+                d3.select("#YearIntercalSelectButton").on("change", function(d) {
+                  var selectedYear = d3.select(this).property("value");
+                  if(selectedYear == 'Select a year interval') {
+                    YearChosen = 'all';
                   } else {
-                    itemList = [];
-                    itemList.push({
-                      'Material': temp,
-                      'Artist': artist,
-                      'Completion Year': date,
-                      'Accession Number': acsNumber,
-                      'MediumDetail': mediumDetail,
-                      'DisplayTitle': displayTitle,
-                      'Latitude': latitude,
-                      'Longitude': longitude,
-                      'Material Type': mType
-
-                    })
-                    typeSubMap[temp]= itemList;
-
+                    YearChosen = selectedYear;
                   }
-                  mTypeMap[mType] = typeSubMap;
+                  console.log("op CHANGED: year: " + YearChosen);
 
-                } else {
-                  typeSubMap = {};
-                  typeSubMap[temp] = [];
-
-                  itemList = [];
-                  itemList.push({
-                    'Material': temp,
-                    'Artist': artist,
-                    'Completion Year': date,
-                    'Accession Number': acsNumber,
-                    'MediumDetail': mediumDetail,
-                    'DisplayTitle': displayTitle,
-                    'Latitude': latitude,
-                    'Longitude': longitude,
-                    'Material Type': mType
-
-                  })
-                  typeSubMap[temp] = itemList;
-                  mTypeMap[mType] = typeSubMap;
-                }
+                })
 
 
-                index++;
-              }
+                d3.select("#MaterialTypeSelectButton").on("change", function(d) {
+                  var selectedMType = d3.select(this).property("value");
+                  if(selectedMType == 'Select a material type') {
+                    MTypeChosen = 'all';
+                  } else {
+                    MTypeChosen = selectedMType;
+                  }
+                  console.log("op CHANGED: material type: " + MTypeChosen);
+
+               })
+
+
+      /*       } else {
+               optionYI.property("selected", function(d) {
+                 return d === 'Select a year interval';
+               });
+
+               optionMT.property("selected", function(d) {
+                 return d === 'Select a material type';
+               });
+             }*/
+
+//'Select a year interval' optionYI  'Select a material type' optionMT
+
+console.log("op: year: " + YearChosen);
+console.log("op: material type: " + MTypeChosen);
+
+//'Select a year interval'  'Select a material type'
+          }
+
+
+
+
+          function recordOneType(typeSet, matExactMap, original, nodes, typeName) {
+            typeCount = 0;
+            typeSetSize = typeSet.size;
+            var typeItr = typeSet.entries();
+            for(i=0;i<typeSetSize;i++){
+              exactMaterial = typeItr.next().value[0];
+              nodes.add(exactMaterial);
+
+              exactList = [];
+              exactList = matExactMap[exactMaterial];
+    //         console.log(exactMaterial);
+    //          console.log(exactList);
+
+              original.push({
+                'name' : exactMaterial,
+                'count' : exactList.length,
+                'leave' : 1
+              })
+              typeCount ++;
             }
-            return materialSet;
+            original.push({
+              'name' : typeName,
+              'count' : typeCount,
+              'leave' : typeCount
+            })
 
+            return typeCount;
           }
 
-          function makeDataFormat(data) {
-//console.log(materialSet);
-console.log(matExactMap);
-console.log(mTypeMap);
+          function getTimeIntervalIndex(year) {
+            //every 25 years
+            //0: 1811-1835
+            //1: 1836-1860
+            //2: 1861-1885
+            //3: 1886-1910
+            //4: 1911-1935
+            //5: 1936-1960
+            //6: 1961-1985
+            //7: 1986-2010
+            //8: 2011-2035
+            var yearValue = parseInt(year);
 
+            var diff = yearValue - 1811;
+            if(diff < 25) {
+              return 0; //0: 1811-1835
+            } else if(diff >= 25 && diff < 50){
+              return 1; //1: 1836-1860
+            } else if(diff >= 50 && diff < 75) {
+              return 2; //2: 1861-1885
+            } else if (diff >= 75 && diff < 100) {
+              return 3; //3: 1886-1910
+            } else if(diff >= 100 && diff < 125) {
+              return 4;
+            } else if(diff >= 125 && diff < 150) {
+              return 5;
+            } else if (diff >= 150 && diff < 175) {
+              return 6;
+            } else if (diff >= 175 && diff < 200) {
+              return 7;
+            } else if (diff >= 200 && diff < 225) {
+              return 8;
+            }
 
+            return 9; //8 is for unkown year...
 
           }
-
-
-
 
 
 

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Prototype Page - Beta</title>
+    <title>Prototype Page - Final Impelementation Page</title>
 
     <!-- Load Bulma from CDN (consider saving it to repository instead) -->
     <!-- https://bulma.io/ -->
@@ -69,7 +69,7 @@
   <section class="hero is-info is-bold">
     <div class="hero-body">
       <div class="container">
-        <h1 class="title">Prototype Page - Beta</h1>
+        <h1 class="title">Prototype Page - Final Impelementation Page</h1>
         <h2 class="subtitle">Visualization in d3.js</h2>
       </div>
     </div>
@@ -198,6 +198,199 @@
             tooltip: svg.select("g#tooltip"),
             details: svg.select("g#details")
           };
+
+
+
+
+          let matExactMap = {};
+          let mTypeMap = {};
+          let materialSet = new Set();
+
+          let metalSet = new Set(["bronze", "steel", "gold leaf", "brass", "aluminum", "zinc", "copper", "bronzing powder", "metal", "cast aluminum", "brass tacks", "dutch gold", "copper leaf", "iron", "painted iron", "cast bronze", "gold"]);
+          let mineralSet = new Set(["marble","granite", "terrazzo", "stone tiles", "cast stone", "soil", "lava rock", "stone", "basalt", "travertine", "marble tile", "graphite", "tesserae", "tuff stone", "stone boulder", "charcoal", "mortar",
+          "crystals", "minerals", "red porphyry", "onyx"]);
+          let ecoSet = new Set(["wood", "bone", "horn", "resin", "cotton", "plant", "oil", "wool", "planted earthwork", "wax", "bamboo", "ecological references", "water", "willow", "tule reed"]);
+
+          let dailyLifeSet = new Set(["ink", "cables", "mirror", "video", "magnets", "electrical reed switches"
+          , "photogram", "wire", "egg tempera", "aero plate", "Loudspeakers", "audiobox","electrical wiring",
+          "pencil", "paper", "digital print", "buttons", "jewelry", "recycled parking meter heads", "brass saxophones", "steel music panels", "shade cloth", "controller", "mirrors","motors","electronics","recycled mirrors", "annotated library cards"]);
+
+          let architectureSet = new Set(["paint", "mixed medium","plastic","led lighting","slate", "lighting", "asphalt","unknown", "mixed media relief","painted mural", "linoleum", "pigment", "architectural foam", "pigment print", "pastel", "archival pigment print", "cast aggregate", "concrete paving", "mixed media color lino-cut print", "lacquer paint", "foam", "fabric collage", "soffits", "land scaping", "lino-cut print", "cement", "polyurethane foam",
+          "found objects", "plaster", "fresco", "concrete", "mixed media", "neon lighting", "argon lighting", "fluorescent lighting", "lacquer paints", "mirror tile", "abaca paper", "concrete aggregate","laminated glass panels with melting ceramic pigments", "ink with gesso", "led", "mural",
+          "photography", "brick", "pipes", "polymer modified gypsum", "sisal rope"]);
+
+          let kilnSet = new Set(["porcelain enamel","paint","porcelain", "ceramic tile", "clay", "glass", "ceamic beads", "cast glass", "frosted glass", "mosaic tile", "enamel", "ceramic tiles", "ceramic", "gilding", "glazes", "enamel paint", "terracotta tile", "glass tiles", "glazed ceramic"
+          ,"tiles", "crockery", "grout", "basaltic clay", "glass mosaic tile", "gfrc tile", "tile", "mosaic tiles", "glass mosaic", "laminated digital print", "polyurethane paint"]);
+
+
+          const csvMat = "artcommision_categorized_material - Civic_Art_Collection.csv";
+          d3.csv(csvMat, recordMaterialInfo).then(makeDataFormat);
+          //.then(makeHierarchyArray).then(drawHierarchyGraph)
+
+          function recordMaterialInfo(row) {
+            var materials = row.MediumMaterial;
+
+            var matArr = materials.split(",");
+            if(materials.length != 0) {
+              index = 0;
+              while (index < matArr.length) {
+                temp = matArr[index];
+                temp = temp.trim();
+                temp = temp.toLowerCase();
+                if(temp == "" || temp.length < 1) {
+                  temp = "unknown";
+                }
+                materialSet.add(temp);
+
+
+                artist = row.Artist;
+                date = row.CreationFinishDate;
+                acsNumber = row.AccessionNumber;
+                mediumDetail = row.MediumDetail;
+                displayTitle = row.DisplayTitle;
+                latitude = row.Latitude;
+                longitude = row.Longitude;
+                nbh = row.SFFindNeighborhoods;
+                //metalSet, mineralSet, ecoSet, dailyLifeSet, architectureSet, kilnSet
+
+                if(metalSet.has(temp)) {
+                  mType = "Metal";
+                } else if(mineralSet.has(temp)) {
+                  mType = "Mineral";
+                } else if(ecoSet.has(temp)) {
+                  mType = "Ecological";
+                } else if(dailyLifeSet.has(temp)) {
+                  mType = "Daily Life Object";
+                } else if(architectureSet.has(temp)) {
+                  mType = "Architectural Material";
+                } else if(kilnSet.has(temp)) {
+                  mType = "Kiln Product";
+                }
+
+                if(matExactMap[temp]) {
+                  currMatList = matExactMap[temp];
+                  currMatList.push({
+                    'Material': temp,
+                    'Artist': artist,
+                    'Completion Year': date,
+                    'Accession Number': acsNumber,
+                    'MediumDetail': mediumDetail,
+                    'DisplayTitle': displayTitle,
+                    'Latitude': latitude,
+                    'Longitude': longitude,
+                    'Material Type': mType
+                  });
+                  matExactMap[temp] = currMatList;
+                } else {
+                  currMatList = [];
+                  currMatList.push({
+                    'Material': temp,
+                    'Artist': artist,
+                    'Completion Year': date,
+                    'Accession Number': acsNumber,
+                    'MediumDetail': mediumDetail,
+                    'DisplayTitle': displayTitle,
+                    'Latitude': latitude,
+                    'Longitude': longitude,
+                    'Material Type': mType
+                  });
+                  matExactMap[temp] = currMatList;
+                }
+
+                if(mTypeMap[mType]) {
+                  typeSubMap = mTypeMap[mType];
+                  if(typeSubMap[temp]) {
+                    itemList = typeSubMap[temp];
+                    itemList.push({
+                      'Material': temp,
+                      'Artist': artist,
+                      'Completion Year': date,
+                      'Accession Number': acsNumber,
+                      'MediumDetail': mediumDetail,
+                      'DisplayTitle': displayTitle,
+                      'Latitude': latitude,
+                      'Longitude': longitude,
+                      'Material Type': mType
+
+                    })
+                    typeSubMap[temp]= itemList;
+                  } else {
+                    itemList = [];
+                    itemList.push({
+                      'Material': temp,
+                      'Artist': artist,
+                      'Completion Year': date,
+                      'Accession Number': acsNumber,
+                      'MediumDetail': mediumDetail,
+                      'DisplayTitle': displayTitle,
+                      'Latitude': latitude,
+                      'Longitude': longitude,
+                      'Material Type': mType
+
+                    })
+                    typeSubMap[temp]= itemList;
+
+                  }
+                  mTypeMap[mType] = typeSubMap;
+
+                } else {
+                  typeSubMap = {};
+                  typeSubMap[temp] = [];
+
+                  itemList = [];
+                  itemList.push({
+                    'Material': temp,
+                    'Artist': artist,
+                    'Completion Year': date,
+                    'Accession Number': acsNumber,
+                    'MediumDetail': mediumDetail,
+                    'DisplayTitle': displayTitle,
+                    'Latitude': latitude,
+                    'Longitude': longitude,
+                    'Material Type': mType
+
+                  })
+                  typeSubMap[temp] = itemList;
+                  mTypeMap[mType] = typeSubMap;
+                }
+
+
+                index++;
+              }
+            }
+            return materialSet;
+
+          }
+
+
+          function makeDataFormat(data) {
+  console.log(materialSet);
+console.log(matExactMap);
+console.log(mTypeMap);
+//metalSet, mineralSet, ecoSet, dailyLifeSet, architectureSet, kilnSet
+
+            archSubMap = mTypeMap['Architectural Material'];
+            console.log("archSubMap");
+            console.log(archSubMap);
+            archSetSize = architectureSet.size;
+            var archItr = architectureSet.entries();
+            console.log(archSetSize);
+            for(i=0;i<archSetSize;i++){
+      //        console.log(archItr.next().value);
+            }
+
+
+
+          }
+
+
+
+
+
+
+
+
+
 
 
           let artistMap = [];
