@@ -16,6 +16,16 @@
 
     <style>
 
+  #YearIntercalSelectButton {
+    font-size: 16px;
+  }
+  #MaterialTypeSelectButton {
+    font-size: 16px;
+  }
+  #queryButton {
+    font-size: 16px;
+  }
+
   .axis {
     font: 16px sans-serif;
   }
@@ -64,7 +74,8 @@
 
 
  </style>
-  </head>
+
+</head>
 
   <body>
 
@@ -164,7 +175,7 @@
             <g id="tooltip" pointer-events="none"></g>
             <g id="details" pointer-events="none"></g>
           </svg>
-          <p>Filtering options:
+          <p font-size = "30px">Filtering options:
           <select id="YearIntercalSelectButton"></select>
           <select id="MaterialTypeSelectButton"></select>
           <button id="queryButton" onclick="queryButtonClicked()">check art items on the map</button>
@@ -262,7 +273,6 @@ let bx, by;
 
           console.log(urls.artItems);
 
-
           const g = {
             edgeBunddling: svg.select("g#edgeBunddling"),
             basemap: svg.select("g#basemap"),
@@ -272,8 +282,6 @@ let bx, by;
             tooltip: svg.select("g#tooltip"),
             details: svg.select("g#details")
           };
-
-
 
           let matExactMap = {};
           let mTypeMap = {};
@@ -621,9 +629,6 @@ function drawAxis(data) {
    //        scale.color.domain([min, q1, median, q3, max]);
    scale.color.domain([0, d3.max(allValues)]);
 
-        console.log(min +"; " + q1 + "; " + median + "; " + q3+ "; "+ max);
-
-
         // create one group per row
         let rows = plot.selectAll("g.cell")
                .data(data)
@@ -704,7 +709,7 @@ function drawAxis(data) {
 function queryButtonClicked() {
     //YearIntercalSelectButton
     //MaterialTypeSelectButton
-
+    requirement = [];
 
     console.log("query button clicked!!");
 
@@ -733,6 +738,9 @@ function queryButtonClicked() {
 
 console.log("op: year: " + YearChosen);
 console.log("op: material type: " + MTypeChosen);
+requirement[0] = YearChosen;
+requirement[1] = MTypeChosen;
+return requirement
 }
 
 function recordOneType(typeSet, matExactMap, original, nodes, typeName) {
@@ -950,30 +958,37 @@ function getTimeIntervalIndex(year) {
               .attr("cy", function(d) { if(!isNaN(d.y))return d.y;})
               .attr("r", 5)
               .attr("class", "symbol");
+            symbols.style("fill", "black");
 
-              symbolChosen = false;
-              symbols.on("click", function(d) {
+
+            queryReq = queryButtonClicked();
+            //if specific requirement, change set, otherwise use the default set...
+            //according to queryReq, change the set range/content
+            let nameSet = new Set(['Margrill, Anita and Nagasawa, Nobuho']);
+
+
+            symbolChosen = false;
+            symbols.on("click", function(d) {
                 symbols.style("fill", "black");
 
                 if(symbolChosen == false) {
-                  console.log('clicking symbol... ' + d.medium);
-                //  symbols.filter(e => (d.medium !== e.medium)).style("fill", "#e5e5e5").style("fill-opacity", "0.5");
-                symbols.filter(d.medium !== 'Bronze').style("fill", "#e5e5e5").style("fill-opacity", "0.5");
+                  console.log('clicking symbol... ' + d.artist);
+                  symbols.filter(e => (nameSet.has(e.artist))).style("fill", "pink");
+                  if(nameSet.has(d.artist)) {
+                    console.log("???");
+                  }
 
                   symbolChosen = true;
                 } else {
+                  symbols.style("fill", "black");
                   symbolChosen = false;
                 }
-              });
-
-
+            });
 
 
             symbols.on("mouseover", function(d) {
               d3.select(this).raise();
               d3.select(this).classed("active", true);
-              symbols.filter(e => (d.artist == e.artist)).style("fill", "pink").style("fill-opacity", "0.5");
-
 
               // use template literal for the detail table
               // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals
@@ -1014,7 +1029,7 @@ function getTimeIntervalIndex(year) {
 
             symbols.on("mouseout", function(d) {
 
-              symbols.style("fill", "black");
+      //        symbols.style("fill", "black");
 
               d3.select(this).classed("active", false);
               details.style("visibility", "hidden");
