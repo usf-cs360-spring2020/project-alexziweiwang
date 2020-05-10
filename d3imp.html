@@ -66,7 +66,7 @@
   }
 
   circle.symbol {
-    fill-opacity: 0.8;
+    fill-opacity: 0.5;
 
     stroke: white;
     stroke-width: 1px;
@@ -298,6 +298,7 @@ let bx, by;
           let processed = [];
           let timeMap = {};
           let YIMTmap = {};
+          let locMap = {};
           initializeYIMTmap();
           timeMap['architectural material'] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
           timeMap['metal'] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
@@ -394,7 +395,26 @@ let bx, by;
                 latitude = row.Latitude;
                 longitude = row.Longitude;
                 nbh = row.SFFindNeighborhoods;
+                locString = row.Latitude + "&" + row.Longitude;
 
+                if(locMap[locString]) {
+                  locAcsSet = locMap[locString];
+                  locAcsSet.add(acsNumber);
+                  locMap[locString] = locAcsSet;
+  //            console.log(locAcsSet.size);
+                } else { //ne wkey value locString
+                  locAcsSet = new Set();
+                  locAcsSet.add(acsNumber);
+                  locMap[locString] = locAcsSet;
+                }
+            //    console.log('locMap: ');
+
+      //          console.log(locMap);
+// locMap[locString]    locString = row.Latitude + "&" + row.Longitude;   locAcsSet = locMap[locString]   locAcsSet.size
+
+
+
+//locMap
                 //metalSet, mineralSet, ecoSet, dailyLifeSet, architectureSet, kilnSet
                 timeArrIndex = getTimeIntervalIndex(date);
                 currYearInterval = yearInterval[timeArrIndex];
@@ -1005,6 +1025,7 @@ function getTimeIntervalIndex(year) {
 
           function drawArtItems(json) {
             d3.selectAll("#allSymbols").remove();
+            console.log('JSON for art items: ^^^^^^^^^^^^^^^^^^^');
             console.log(json);
             //if specific requirement, change set, otherwise use the default set...
             //according to queryReq, change the set range/content
@@ -1044,6 +1065,8 @@ function getTimeIntervalIndex(year) {
               }
             });
 
+            // locMap[locString]    locString = row.Latitude + "&" + row.Longitude;   locAcsSet = locMap[locString]   locAcsSet.size
+
             const symbols = g.artItems.selectAll("circle")
               .data(json)
               .enter()
@@ -1052,9 +1075,24 @@ function getTimeIntervalIndex(year) {
               .attr("id", "allSymbols")
               .attr("cx", function(d) { if(!isNaN(d.x))return d.x;})
               .attr("cy", function(d) { if(!isNaN(d.y))return d.y;})
-              .attr("r", 5)
-              .attr("class", "symbol");
-    //        symbols.style("fill", "black");
+              .attr("r", function(d) {
+                locStr = d.latitude + "&" + d.longitude;
+
+                if(locMap[locStr]) {
+                  locSet = locMap[locStr];
+                  //both in locSet and acsSet
+                  var intersectionSet = locSet.intersection(acsSet);
+                  caseCount = intersectionSet.size;
+                  console.log(locSet.size + " -> " +caseCount);
+
+                  radius = (caseCount - 1) * 0.3 + 5;
+                } else {
+                  radius = 3;
+                }
+                return radius;
+              })
+              .attr("class", "symbol")
+              .style("fill", "HotPink");
       //      symbols.filter(d => (acsSet.has(d.AccessionNumber))).style("fill", "pink");
       //      console.log(d.AccessionNumber);
 
@@ -1082,6 +1120,19 @@ function getTimeIntervalIndex(year) {
             symbols.on("mouseover", function(d) {
               d3.select(this).raise();
               d3.select(this).classed("active", true);
+              locStr = d.latitude + "&" + d.longitude;
+
+              if(locMap[locStr]) {
+                locSet = locMap[locStr]
+                itemCount = locSet.size;
+
+                locSet = locMap[locStr];
+                //both in locSet and acsSet
+                var intersectionSet = locSet.intersection(acsSet);
+                caseCount = intersectionSet.size;
+              } else {
+                itemCount = 1;
+              }
 
               // use template literal for the detail table
               // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals
@@ -1089,29 +1140,15 @@ function getTimeIntervalIndex(year) {
                 <table border="0" cellspacing="0" cellpadding="2">
                 <tbody>
                 <tr>
-                  <th>Accession Number:</th>
-                  <td>${d.accession_number}</td>
+                  <th>Latitude, Longitude:</th>
+                  <td>${d.latitude}&${d.longitude}</td>
                 </tr>
+
                 <tr>
-                  <th>Display Title:</th>
-                  <td>${d.display_title}</td>
+                  <th>Count of Art Item(s):</th>
+                  <td>${caseCount}</td>
                 </tr>
-                <tr>
-                  <th>Artist:</th>
-                  <td>${d.artist}</td>
-                </tr>
-                <tr>
-                  <th>Creation Date:</th>
-                  <td>${d.creation_date}</td>
-                </tr>
-                <tr>
-                  <th>Medium:</th>
-                  <td>${d.medium}</td>
-                </tr>
-                <tr>
-                  <th>Media & Support:</th>
-                  <td>${d.media_support}</td>
-                </tr>
+
 
               </tbody>
               </table>`;
@@ -1119,6 +1156,46 @@ function getTimeIntervalIndex(year) {
               body.html(html);
               details.style("visibility", "visible");
             });
+
+
+
+/*
+            <tr>
+              <th>Accession Number:</th>
+              <td>${d.accession_number}</td>
+            </tr>
+            <tr>
+              <th>Display Title:</th>
+              <td>${d.display_title}</td>
+            </tr>
+            <tr>
+              <th>Artist:</th>
+              <td>${d.artist}</td>
+            </tr>
+            <tr>
+              <th>Creation Date:</th>
+              <td>${d.creation_date}</td>
+            </tr>
+            <tr>
+              <th>Medium:</th>
+              <td>${d.medium}</td>
+            </tr>
+            <tr>
+              <th>Media & Support:</th>
+              <td>${d.media_support}</td>
+            </tr>
+*/
+
+
+
+
+
+
+
+
+
+
+
 
             symbols.on("mouseout", function(d) {
 
@@ -1134,6 +1211,24 @@ function getTimeIntervalIndex(year) {
             return "translate(" + String(x) + "," + String(y) + ")";
           }
 
+          Set.prototype.intersection = function(otherSet)
+          {
+              // creating new set to store intersection
+              var intersectionSet = new Set();
+
+              // Iterate over the values
+              for(var elem of otherSet)
+              {
+                  // if the other set contains a
+                  // similar value as of value[i]
+                  // then add it to intersectionSet
+                  if(this.has(elem))
+                      intersectionSet.add(elem);
+              }
+
+          // return values of intersectionSet
+          return intersectionSet;
+          }
 
 </script>
 
