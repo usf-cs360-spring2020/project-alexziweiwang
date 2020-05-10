@@ -735,12 +735,12 @@ function drawAxis(data) {
              cells.style("fill", d => scale.color(d.itemCount));
 
              cells.on("mouseover", function(d) {
-                 let text = "Number of Art Item: " + d.itemCount;
+                 let text = "How Many Times of Current Materials Used: " + d.itemCount;
 
                  // create tooltip
                  let tooltip = svg.append('text')
                     .text(text)
-                    .attr('x', 300)
+                    .attr('x', 330)
                     .attr('y', 792)
                     .attr('text-anchor', 'middle') // anchor in the middle
                     .attr('id', 'tooltip')
@@ -1083,11 +1083,10 @@ function getTimeIntervalIndex(year) {
                   //both in locSet and acsSet
                   var intersectionSet = locSet.intersection(acsSet);
                   caseCount = intersectionSet.size;
-                  console.log(locSet.size + " -> " +caseCount);
 
-                  radius = (caseCount - 1) * 0.3 + 5;
+                  radius = (caseCount - 1) * 0.36 + 5;
                 } else {
-                  radius = 3;
+                  radius = 5;
                 }
                 return radius;
               })
@@ -1141,7 +1140,7 @@ function getTimeIntervalIndex(year) {
                 <tbody>
                 <tr>
                   <th>Latitude, Longitude:</th>
-                  <td>${d.latitude}&${d.longitude}</td>
+                  <td>${d.latitude}, ${d.longitude}</td>
                 </tr>
 
                 <tr>
