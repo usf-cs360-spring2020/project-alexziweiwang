@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Final Impelementation Page</title>
+    <title>Final Visualization 1: Historial and Geospatial Distribution of Materials in Art Items</title>
 
     <!-- Load Bulma from CDN (consider saving it to repository instead) -->
     <!-- https://bulma.io/ -->
@@ -66,7 +66,7 @@
   }
 
   circle.symbol {
-    fill-opacity: 0.5;
+    fill-opacity: 0.7;
 
     stroke: white;
     stroke-width: 1px;
@@ -88,7 +88,7 @@
   <section class="hero is-info is-bold">
     <div class="hero-body">
       <div class="container">
-        <h1 class="title">Final Impelementation Page</h1>
+        <h1 class="title">Final Visualization 1: Historial and Geospatial Distribution of Materials in Art Items</h1>
         <h2 class="subtitle">Visualization in d3.js</h2>
       </div>
     </div>
@@ -136,10 +136,17 @@
                 <span>Prototype-Beta-OverallMap: non-proportional symbol map in d3.js</span>
               </a>
 
-              <a class="navbar-item" href="d3imp.html">
+              <a class="navbar-item" href="finalViz1mapHm.html">
                 <span class="icon"><i class="fas fa-chart-line"></i></span>
-                <span>Final Visualization</span>
+                <span>Final Visualization 1: historial and geospatial distribution of materials in art items</span>
               </a>
+
+              <a class="navbar-item" href="finalViz2Hierarchical.html">
+                <span class="icon"><i class="fas fa-chart-line"></i></span>
+                <span>Final Visualization 2: hierarchical relationship of types of materials in art items</span>
+              </a>
+
+
 
             </div>
           </div>
@@ -184,7 +191,8 @@
               Filtering options:
               <select id="YearIntercalSelectButton"></select>
               <select id="MaterialTypeSelectButton"></select>
-          <button id="queryButton" onclick="queryButtonClicked()">check art items on the map</button>
+          <button id="queryButton" onclick="queryButtonClicked()">check art items on the map</button></br>
+          <a href = "finalViz2Hierarchical.html" target = "_blank">What kind of materials are there in each type? (Click to see more specific material classifications!)</a>
 
         </p>
 
@@ -197,10 +205,6 @@
         <script src="https://d3js.org/d3.v5.min.js"></script>
 
 <script>
-
-
-
-
 
 // configuration of svg/plot area
 let config = {
@@ -251,7 +255,11 @@ scale.y = d3.scaleBand();
 scale.y.range([config.plot.height, 0]);
 
 // https://github.com/d3/d3-scale-chromatic
-scale.color = d3.scaleSequential(d3.interpolateYlGnBu);
+scale.color = d3.scaleSequential(d3.interpolatePurples);
+
+
+//interpolatePuBuGn
+
 
 let axis = {};  // axes for data
 axis.x = d3.axisBottom(scale.x);
@@ -260,9 +268,6 @@ axis.x.tickPadding(0);
 axis.y = d3.axisLeft(scale.y);
 axis.y.tickPadding(0);
 
-let bcScale = {};
-let bcAxis = {};
-let bx, by;
 
           const urls = {
             basemap: "https://data.sfgov.org/resource/xfcw-9evu.geojson",
@@ -290,6 +295,15 @@ let bx, by;
             details: svg.select("g#details")
           };
 
+
+          const width = 960;
+          const height = 500;
+          const pad = 15;
+          const r = 10;
+          const diameter = 500;
+          const color = d3.scaleSequential(d3.interpolateGnBu);
+          //interpolateGnBu
+          color.domain([0,235,471,706,942]);
           let matExactMap = {};
           let mTypeMap = {};
           let materialSet = new Set();
@@ -352,7 +366,7 @@ let bx, by;
           let hmChosen = false;
 
 
-          let metalSet = new Set(["bronze", "steel", "gold leaf", "brass", "aluminum", "zinc", "copper", "bronzing powder", "metal", "copper leaf", "iron", "gold"]);
+          let metalSet = new Set(["bronze", "steel", "gold leaf", "brass", "aluminum", "zinc", "copper", "bronzing powder", "metalmaterial", "copper leaf", "iron", "gold"]);
           let mineralSet = new Set(["marble","granite", "terrazzo", "stone tiles", "cast stone", "soil", "lava rock", "stone", "basalt", "travertine", "graphite", "tesserae", "tuff stone", "stone boulder", "charcoal", "mortar",
           "crystals", "minerals", "red porphyry", "onyx"]);
           let ecoSet = new Set(["wood", "bone", "horn", "resin", "cotton", "plant", "oil", "wool", "planted earthwork", "wax", "bamboo", "ecological references", "water", "willow", "tule reed"]);
@@ -369,7 +383,19 @@ let bx, by;
           ,"crockery", "grout", "basaltic clay", "glass mosaic tile", "gfrc tile", "tile", "glass mosaic", "laminated digital print", "polyurethane paint"]);
 
           const csvMat = "artcommision_categorized_material - Civic_Art_Collection.csv";
-          d3.csv(csvMat, recordMaterialInfo).then(makeDataFormat).then(drawAxis).then(drawHeatmap);
+          d3.csv(csvMat, recordMaterialInfo).then(makeHMDataFormat).then(drawAxis).then(drawHeatmap);
+          d3.json(urls.basemap).then(function(json) {
+            // makes sure to adjust projection to fit all of our regions
+            projection.fitSize([960, 600], json);
+
+            // draw the land and neighborhood outlines
+            drawBasemap(json);
+
+            // now that projection has been set trigger loading the other files
+            // note that the actual order these files are loaded may differ
+            d3.json(urls.streets).then(drawStreets);
+            d3.json(urls.artItems).then(drawArtItems);
+          });
         //.then(drawTitleCaptions);
 
           function recordMaterialInfo(row) {
@@ -397,6 +423,8 @@ let bx, by;
                 nbh = row.SFFindNeighborhoods;
                 locString = row.Latitude + "&" + row.Longitude;
 
+
+
                 if(locMap[locString]) {
                   locAcsSet = locMap[locString];
                   locAcsSet.add(acsNumber);
@@ -419,6 +447,7 @@ let bx, by;
                 timeArrIndex = getTimeIntervalIndex(date);
                 currYearInterval = yearInterval[timeArrIndex];
 
+
                 if(metalSet.has(temp)) {
                   mType = "metal";
                 } else if(mineralSet.has(temp)) {
@@ -434,6 +463,10 @@ let bx, by;
                 } else {
                   console.log("not having: ");
                   console.log(temp);
+                }
+
+                if(temp == 'metal') {
+                  console.log("@@@@@@@@@@@@@@@@@"+acsNumber);
                 }
 
                 setAllMT = YIMTmap['allYI']['all mType'];
@@ -592,11 +625,8 @@ let bx, by;
           }
 
 
-          function makeDataFormat(data) {
-            console.log('materialSet: ');
-            console.log(materialSet);
-            console.log('mTypeMap: ');
-            console.log(mTypeMap);
+          function makeHMDataFormat(data) {
+
             console.log('timeMap: ');
             console.log(timeMap);
             console.log('rawDataPlatTableArr: ');
@@ -604,35 +634,7 @@ let bx, by;
             console.log("Completed YIMTmap: ");
             console.log(YIMTmap);
 
-//metalSet, mineralSet, ecoSet, dailyLifeSet, architectureSet, kilnSet
-            allCount = 0; //count of leaves
-
-            archName = 'architectural material';
-            typeCount = recordOneType(architectureSet, matExactMap, original, nodes, archName);
-            allCount = allCount + typeCount;
-
-            metalName = "metal";
-            typeCount = recordOneType(metalSet, matExactMap, original, nodes, metalName);
-            allCount = allCount + typeCount;
-
-            mineralName = "mineral";
-            typeCount = recordOneType(mineralSet, matExactMap, original, nodes, mineralName);
-            allCount = allCount + typeCount;
-
-            ecoName = "ecological";
-            typeCount = recordOneType(ecoSet, matExactMap, original, nodes, ecoName);
-            allCount = allCount + typeCount;
-
-            dailyName = "daily life object";
-            typeCount = recordOneType(dailyLifeSet, matExactMap, original, nodes, dailyName);
-            allCount = allCount + typeCount;
-
-            kilnName = "kiln product";
-            typeCount = recordOneType(kilnSet, matExactMap, original, nodes, kilnName);
-            allCount = allCount + typeCount;
-
-            console.log(allCount);
-
+            //prepare data format for heatmap
             i = 0;
             while(i < 6) {
               let oneRow = {};
@@ -657,6 +659,266 @@ let bx, by;
             console.log(res);
             return res;
 }
+
+
+function makeCirTreeDataFormat(data) {
+  console.log('matExactMap: ');
+  console.log(matExactMap);
+  console.log('materialSet: ');
+  console.log(materialSet);
+  console.log('mTypeMap: ');
+  console.log(mTypeMap);
+
+  console.log('rawDataPlatTableArr: ');
+  console.log(rawDataPlatTableArr);
+
+
+//metalSet, mineralSet, ecoSet, dailyLifeSet, architectureSet, kilnSet
+  allCount = 0; //count of leaves
+
+  archName = 'architectural material';
+  typeCount = recordOneType(architectureSet, matExactMap, original, nodes, archName);
+  allCount = allCount + typeCount;
+
+  metalName = "metal";
+  typeCount = recordOneType(metalSet, matExactMap, original, nodes, metalName);
+  allCount = allCount + typeCount;
+
+  mineralName = "mineral";
+  typeCount = recordOneType(mineralSet, matExactMap, original, nodes, mineralName);
+  allCount = allCount + typeCount;
+
+  ecoName = "ecological";
+  typeCount = recordOneType(ecoSet, matExactMap, original, nodes, ecoName);
+  allCount = allCount + typeCount;
+
+  dailyName = "daily life object";
+  typeCount = recordOneType(dailyLifeSet, matExactMap, original, nodes, dailyName);
+  allCount = allCount + typeCount;
+
+  kilnName = "kiln product";
+  typeCount = recordOneType(kilnSet, matExactMap, original, nodes, kilnName);
+  allCount = allCount + typeCount;
+
+  original.push({
+    'name' : 'root',
+    'parent' : '',
+    'count' : allCount,
+    'leave' : allCount
+  })
+
+  console.log('allCount: ' + allCount);
+  console.log('original: ');
+  console.log(original);
+
+
+  root = d3.stratify()
+.id(function(row) { return row.name; })
+.parentId(function(row) {
+return row.parent;
+})
+(original);
+
+console.log("root: ");
+console.log(root);
+
+
+return root;
+}
+
+
+    function cirtree(data) {
+          data.sort(function(a, b) {
+            return b.height - a.height || b.count - a.count;
+          });
+
+          let layout = d3.tree().size([2 * Math.PI, (diameter / 2) - pad]);
+
+          layout(data);
+
+          data.each(function(node) {
+            node.theta = node.x;
+            node.radial = node.y;
+
+            var point = toCartesian(node.radial, node.theta);
+            node.x = point.x;
+            node.y = point.y;
+          });
+
+          let plot = svg.append("g")
+            .attr("id", "plot")
+            .attr("transform", translate(pad + 90, pad));
+
+            let line = d3.line()
+              .curve(d3.curveLinear)
+              .x(d => d.x + 900)
+              .y(d => d.y + 260);
+
+            let generator = function(node) {
+              return line([node.source, node.target]);
+            }
+
+          drawLinks(plot.append("g"), data.links(), generator);
+          drawNodes(plot.append("g"), data.descendants(), true);
+          console.log(data.descendants());
+          return svg.node();
+        }
+
+        function drawLinks(g, links, generator) {
+          let paths = g.selectAll('path')
+            .data(links)
+            .enter()
+            .append('path')
+              .attr('d', generator)
+              .attr('class', 'link')
+              .style('stroke','silver')
+              .style("fill-opacity", "0.8");
+        }
+
+        function drawNodes(g, nodes, raise) {
+          let acsSet = new Set();
+          if (YearChosen == 'all') {
+            if(MTypeChosen == 'all') {
+              acsSet = YIMTmap['allYI']['all mType'];
+            } else {
+              acsSet = YIMTmap['allYI'][MTypeChosen];
+            }
+          } else {
+            if(MTypeChosen == 'all') {
+              acsSet = YIMTmap[YearChosen]['all mType'];
+            } else {
+              acsSet = YIMTmap[YearChosen][MTypeChosen];
+            }
+          }
+
+          console.log("acsSet before drawing nodes: ");
+          console.log(acsSet);
+          let circles = g.selectAll('circle')
+            .data(nodes, node => node.data.name)
+            .enter()
+            .append('circle')
+              .attr('r', r)
+              .attr('cx', d => d.x + 900)
+              .attr('cy', d => d.y + 260)
+              .attr('id', d => d.data.name)
+              .attr('class', 'node')
+              .style('fill', d => color(d.data.count))
+              .style('stroke','silver')
+              .style("stroke-width", 1);
+
+          setupEvents(g, circles, raise);
+        }
+
+
+
+
+        function toCartesian(r, theta) {
+          return {
+            x: r * Math.cos(theta),
+            y: r * Math.sin(theta)
+          };
+        }
+
+
+        function setupEvents(g, selection, raise) {
+
+                 selection.on('mouseover.highlight', function(d) {
+                   // https://github.com/d3/d3-hierarchy#node_path
+                   // returns path from d3.select(this) node to selection.data()[0] root node
+                   let path = d3.select(this).datum().path(selection.data()[0]);
+            //       console.log(path);
+                   // select all of the nodes on the shortest path
+                   let update = selection.data(path, nodes => nodes.id);
+
+                   // highlight the selected nodes
+                   update.classed('selected', true);
+
+                   if (raise) {
+                     update.raise()
+                     .style("stroke", "#e68a00")
+                     .style("stroke-width", 5);
+                   }
+                 });
+
+                 selection.on('mouseout.highlight', function(d) {
+                   let path = d3.select(this).datum().path(selection.data()[0]);
+                   let update = selection.data(path, node => node.data.name);
+                   update.classed('selected', false);
+                   update.style("stroke", "silver")
+                   .style("stroke-width", 1);
+                 });
+
+                 // show tooltip text on mouseover (hover)
+                 selection.on('mouseover.tooltip', function(d) {
+                   showTooltip(g, d3.select(this));
+                 });
+
+                 // remove tooltip text on mouseout
+                 selection.on('mouseout.tooltip', function(d) {
+                   g.select("#tooltip").remove();
+                 });
+               }
+
+
+
+               numberFormat = d3.format(".3~s");
+               function showTooltip(g, node) {
+                         let gbox = g.node().getBBox();     // get bounding box of group BEFORE adding text
+                         let nbox = node.node().getBBox();  // get bounding box of node
+
+                         // calculate shift amount
+                         let dx = nbox.width / 2;
+                         let dy = nbox.height / 2;
+
+                         // retrieve node attributes (calculate middle point)
+                         let x = nbox.x + dx;
+                         let y = nbox.y + dy;
+
+                         // get data for node
+                         let datum = node.datum();
+
+
+                         let name = datum.data.name;
+
+
+                         let text = `${name}`;
+
+
+
+
+                         // create tooltip
+                         let tooltip = g.append('text')
+                           .text(text)
+                           .attr('x', x)
+                           .attr('y', y)
+                           .attr('dy', -dy - 4) // shift upward above circle
+                           .attr('text-anchor', 'middle') // anchor in the middle
+                           .attr('id', 'tooltip')
+                           .style('stroke','orange');
+
+                         // it is possible the tooltip will fall off the edge of the
+                         // plot area. we can detect when this happens, and set the
+                         // text anchor appropriately
+
+                         // get bounding box for the text
+                         let tbox = tooltip.node().getBBox();
+
+                         // if text will fall off left side, anchor at start
+                         if (tbox.x < gbox.x) {
+                           tooltip.attr('text-anchor', 'start');
+                           tooltip.attr('dx', -dx); // nudge text over from center
+                         }
+                         // if text will fall off right side, anchor at end
+                         else if ((tbox.x + tbox.width) > (gbox.x + gbox.width)) {
+                           tooltip.attr('text-anchor', 'end');
+                           tooltip.attr('dx', dx);
+                         }
+
+                         // if text will fall off top side, place below circle instead
+                         if (tbox.y < gbox.y) {
+                           tooltip.attr('dy', dy + tbox.height);
+                         }
+                       }
 
 
 function drawAxis(data) {
@@ -735,13 +997,13 @@ function drawAxis(data) {
              cells.style("fill", d => scale.color(d.itemCount));
 
              cells.on("mouseover", function(d) {
-                 let text = "How Many Times of Current Materials Used: " + d.itemCount;
+                 let text = "How Many Times of Current Type of Material Used: " + d.itemCount;
 
                  // create tooltip
                  let tooltip = svg.append('text')
                     .text(text)
-                    .attr('x', 330)
-                    .attr('y', 792)
+                    .attr('x', 360)
+                    .attr('y', 795)
                     .attr('text-anchor', 'middle') // anchor in the middle
                     .attr('id', 'tooltip')
                     .attr("font-weight",300)
@@ -847,17 +1109,21 @@ function recordOneType(typeSet, matExactMap, original, nodes, typeName) {
     exactList = [];
     exactList = matExactMap[exactMaterial];
 //         console.log(exactMaterial);
-//          console.log(exactList);
+        //  console.log(exactList);
+    aitCount = exactList.length;
 
     original.push({
       'name' : exactMaterial,
-      'count' : exactList.length,
+      'parent' : typeName,
+      'count' : aitCount,
       'leave' : 1
     })
-    typeCount ++;
+    typeCount = typeCount + aitCount;
   }
+
   original.push({
     'name' : typeName,
+    'parent' : 'root',
     'count' : typeCount,
     'leave' : typeCount
   })
@@ -946,19 +1212,6 @@ function getTimeIntervalIndex(year) {
           // setup path generator (note it is a GEO path, not a normal path)
           const path = d3.geoPath().projection(projection);
 
-          d3.json(urls.basemap).then(function(json) {
-            // makes sure to adjust projection to fit all of our regions
-            projection.fitSize([960, 600], json);
-
-            // draw the land and neighborhood outlines
-            drawBasemap(json);
-
-            // now that projection has been set trigger loading the other files
-            // note that the actual order these files are loaded may differ
-            d3.json(urls.streets).then(drawStreets);
-            d3.json(urls.artItems).then(drawArtItems);
-          });
-
           function drawBasemap(json) {
             console.log("basemap", json);
 
@@ -991,7 +1244,7 @@ function getTimeIntervalIndex(year) {
             });
 
             // add tooltip
-            basemap.on("mouseover.tooltip", function(d) {
+      /*      basemap.on("mouseover.tooltip", function(d) {
               tip.text(d.properties.nhood);
               tip.style("visibility", "visible");
             })
@@ -1003,6 +1256,7 @@ function getTimeIntervalIndex(year) {
             .on("mouseout.tooltip", function(d) {
               tip.style("visibility", "hidden");
             });
+            */
           }
 
           function drawStreets(json) {
@@ -1091,7 +1345,7 @@ function getTimeIntervalIndex(year) {
                 return radius;
               })
               .attr("class", "symbol")
-              .style("fill", "HotPink");
+              .style("fill", "#e6b800");
       //      symbols.filter(d => (acsSet.has(d.AccessionNumber))).style("fill", "pink");
       //      console.log(d.AccessionNumber);
 
@@ -1115,6 +1369,8 @@ function getTimeIntervalIndex(year) {
                 }
             });
 */
+//TODO symbols clicked? show table of all art items in the "detail" table area?
+
 
             symbols.on("mouseover", function(d) {
               d3.select(this).raise();
@@ -1157,49 +1413,7 @@ function getTimeIntervalIndex(year) {
             });
 
 
-
-/*
-            <tr>
-              <th>Accession Number:</th>
-              <td>${d.accession_number}</td>
-            </tr>
-            <tr>
-              <th>Display Title:</th>
-              <td>${d.display_title}</td>
-            </tr>
-            <tr>
-              <th>Artist:</th>
-              <td>${d.artist}</td>
-            </tr>
-            <tr>
-              <th>Creation Date:</th>
-              <td>${d.creation_date}</td>
-            </tr>
-            <tr>
-              <th>Medium:</th>
-              <td>${d.medium}</td>
-            </tr>
-            <tr>
-              <th>Media & Support:</th>
-              <td>${d.media_support}</td>
-            </tr>
-*/
-
-
-
-
-
-
-
-
-
-
-
-
             symbols.on("mouseout", function(d) {
-
-      //        symbols.style("fill", "black");
-
               d3.select(this).classed("active", false);
               details.style("visibility", "hidden");
             });
@@ -1210,8 +1424,7 @@ function getTimeIntervalIndex(year) {
             return "translate(" + String(x) + "," + String(y) + ")";
           }
 
-          Set.prototype.intersection = function(otherSet)
-          {
+          Set.prototype.intersection = function(otherSet){
               // creating new set to store intersection
               var intersectionSet = new Set();
 
