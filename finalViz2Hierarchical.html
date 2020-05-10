@@ -303,7 +303,7 @@
               let MTypeChosen = 'all';
               let hmChosen = false;
 
-
+              let jsonInputArray = [];
               let metalSet = new Set(["bronze", "steel", "gold leaf", "brass", "aluminum", "zinc", "copper", "bronzing powder", "metalmaterial", "copper leaf", "iron", "gold"]);
               let mineralSet = new Set(["marble","granite", "terrazzo", "stone tiles", "cast stone", "soil", "lava rock", "stone", "basalt", "travertine", "graphite", "tesserae", "tuff stone", "stone boulder", "charcoal", "mortar",
               "crystals", "minerals", "red porphyry", "onyx"]);
@@ -1005,6 +1005,16 @@
                                            d.x = -10;
                                            d.y = -10;
                                          }
+
+                                         jsonInputArray.push({
+                                           'Display Title': d.display_title,
+                                           'Artist:': d.artist,
+                                           'Completion Year': d.creation_date,
+                                           'Accession Number': d.accession_number,
+                                           'Medium Detail': d.medium,
+                                           'Latitude': d.latitude,
+                                           'Longitude': d.longitude
+                                         })
                                        });
 
                                        // locMap[locString]    locString = row.Latitude + "&" + row.Longitude;   locAcsSet = locMap[locString]   locAcsSet.size
@@ -1043,33 +1053,32 @@
 
                                      if(symbolChosen == false) {
                                        console.log('clicking symbol... ' + d.latitude + ", " + d.longitude);
-                                       len = rawDataPlatTableArr.length;
+                                       len = jsonInputArray.length;
                                        let chosenSymbolList = [];
                                        for(i=0;i<len;i++) {
-                                         if(rawDataPlatTableArr[i]['Latitude'] == d.latitude
-                                         && rawDataPlatTableArr[i]['Longitude'] == d.longitude) {
+                                         if(jsonInputArray [i]['Latitude'] == d.latitude
+                                         && jsonInputArray [i]['Longitude'] == d.longitude) {
 
-                                           console.log('clicking symbol... ' + rawDataPlatTableArr[i]['Latitude']
-                                           + ", " + rawDataPlatTableArr[i]['Longitude']);
+                                           console.log('clicking symbol... ' + jsonInputArray [i]['Latitude']
+                                           + ", " + jsonInputArray [i]['Longitude']);
                                            chosenSymbolList.push({
-                                             'Display Title': rawDataPlatTableArr[i]['DisplayTitle'],
-                                             'Artist:': rawDataPlatTableArr[i]['Artist'],
-                                             'Completion Year': rawDataPlatTableArr[i]['Completion Year'],
-                                             'Accession Number': rawDataPlatTableArr[i]['Accession Number'],
-                                             'Medium Detail': rawDataPlatTableArr[i]['MediumDetail']
+                                             'Display Title': jsonInputArray [i]['display_title'],
+                                             'Artist:': jsonInputArray [i]['artist'],
+                                             'Completion Year': jsonInputArray [i]['creation_date'],
+                                             'Accession Number': jsonInputArray [i]['accession_number'],
+                                             'Medium Detail': jsonInputArray [i]['medium']
                                            })
                                          }
-
                                        }
                                        console.log('chosenSymbolList: ');
                                        console.log(chosenSymbolList);
                                        //TODO chosenSymbolList
                                        //TODO to display!!
-                               /*          symbols.filter(e => (acsSet.has(e.AccessionNumber))).style("fill", "pink");
+                             /*          symbols.filter(e => (acsSet.has(e.AccessionNumber))).style("fill", "pink");
                                        if(acsSet.has(d.AccessionNumber)) {
                                          console.log("???");
                                        }
-                               */
+                     */
 
 
                                        symbolChosen = true;
@@ -1078,7 +1087,6 @@
                                        symbolChosen = false;
                                      }
                                  });
-
                                  //TODO symbols clicked? show table of all art items in the "detail" table area?
 
 
