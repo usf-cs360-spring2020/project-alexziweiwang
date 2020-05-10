@@ -200,7 +200,7 @@
 
 
     const width = 1440;
-    const height = 800;
+    const height = 600;
 
 
     // setup svg
@@ -889,9 +889,9 @@
                                      // https://bl.ocks.org/mbostock/1424037
                                      const details = g.details.append("foreignObject")
                                        .attr("id", "details")
-                                       .attr("width", 700)
-                                       .attr("height", 500)
-                                       .attr("x", 180)
+                                       .attr("width", 500)
+                                       .attr("height", 260)
+                                       .attr("x", 268)
                                        .attr("y", 36);
 
                                      const body = details.append("xhtml:body")
@@ -1037,26 +1037,48 @@
                                  //      symbols.filter(d => (acsSet.has(d.AccessionNumber))).style("fill", "pink");
                                  //      console.log(d.AccessionNumber);
 
+                                 symbolChosen = false;
+                                 symbols.on("click", function(d) {
+                                     symbols.style("fill", "#e6b800");
 
-                                 /*
+                                     if(symbolChosen == false) {
+                                       console.log('clicking symbol... ' + d.latitude + ", " + d.longitude);
+                                       len = rawDataPlatTableArr.length;
+                                       let chosenSymbolList = [];
+                                       for(i=0;i<len;i++) {
+                                         if(rawDataPlatTableArr[i]['Latitude'] == d.latitude
+                                         && rawDataPlatTableArr[i]['Longitude'] == d.longitude) {
+
+                                           console.log('clicking symbol... ' + rawDataPlatTableArr[i]['Latitude']
+                                           + ", " + rawDataPlatTableArr[i]['Longitude']);
+                                           chosenSymbolList.push({
+                                             'Display Title': rawDataPlatTableArr[i]['DisplayTitle'],
+                                             'Artist:': rawDataPlatTableArr[i]['Artist'],
+                                             'Completion Year': rawDataPlatTableArr[i]['Completion Year'],
+                                             'Accession Number': rawDataPlatTableArr[i]['Accession Number'],
+                                             'Medium Detail': rawDataPlatTableArr[i]['MediumDetail']
+                                           })
+                                         }
+
+                                       }
+                                       console.log('chosenSymbolList: ');
+                                       console.log(chosenSymbolList);
+                                       //TODO chosenSymbolList
+                                       //TODO to display!!
+                               /*          symbols.filter(e => (acsSet.has(e.AccessionNumber))).style("fill", "pink");
+                                       if(acsSet.has(d.AccessionNumber)) {
+                                         console.log("???");
+                                       }
+                               */
+
+
+                                       symbolChosen = true;
+                                     } else {
+                                       symbols.style("fill", "#e6b800");
                                        symbolChosen = false;
-                                       symbols.on("click", function(d) {
-                                           symbols.style("fill", "black");
+                                     }
+                                 });
 
-                                           if(symbolChosen == false) {
-                                             console.log('clicking symbol... ' + d.artist);
-                                             symbols.filter(e => (acsSet.has(e.AccessionNumber))).style("fill", "pink");
-                                             if(acsSet.has(d.AccessionNumber)) {
-                                               console.log("???");
-                                             }
-
-                                             symbolChosen = true;
-                                           } else {
-                                             symbols.style("fill", "black");
-                                             symbolChosen = false;
-                                           }
-                                       });
-                                 */
                                  //TODO symbols clicked? show table of all art items in the "detail" table area?
 
 
@@ -1144,20 +1166,6 @@
                                                return intersectionSet;
                                                }
 </script>
-
-
-        <h3>Question: </h3>
-        <p> Is there any clustering of artists that use similar materials as medium of art items and how are the artists connected to each other by such similarity?</p>
-
-        <h3>Answer: </h3>
-        <p> We might need further data visualization to answer the question, since symbols on the map would be hard to see relationships like connections among them.</p>
-
-        <h3>Encoding: </h3>
-        <p> In this map visualization, each symbol on the map represents the position of an art item. When hovering on a symbol, the pink on symbols means those art items are created by the same artist; when clicking on a symbol, all symbol with art item made from same materials as medium would remain.
-        </p>
-
-        <h3>Interactivity: </h3>
-        <p> If the user choose to see a type of medium(material) or an artist on the map, only symbols that are under this category would remain on this geospatial data visualization, and relative edge-bundling graph would also show up for presenting relationships among artists.</p>
 
 
 
