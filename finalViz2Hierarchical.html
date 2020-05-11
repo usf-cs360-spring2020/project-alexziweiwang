@@ -326,7 +326,7 @@
               ,"crockery", "grout", "basaltic clay", "glass mosaic tile", "gfrc tile", "tile", "glass mosaic", "laminated digital print", "polyurethane paint"]);
 
               const csvMat = "artcommision_categorized_material - Civic_Art_Collection.csv";
-    d3.csv(csvMat, recordMaterialInfo).then(makeCirTreeDataFormat).then(cirtree);
+    d3.csv(csvMat, recordMaterialInfo).then(makeCirTreeDataFormat).then(cirtree).then(drawColorLegend);
     d3.json(urls.basemap).then(function(json) {
       // makes sure to adjust projection to fit all of our regions
       projection.fitSize([960, 600], json);
@@ -957,6 +957,7 @@
                                        */
                                      }
 
+
                                      function drawStreets(json) {
                                        console.log("streets", json);
 
@@ -1199,7 +1200,72 @@
 
                                                // return values of intersectionSet
                                                return intersectionSet;
-                                               }
+                                             }
+                                               function drawColorLegend() {
+                                                      const legendWidth = 200;
+                                                      const legendHeight = 20;
+
+                                                      // place legend in its own group
+                                                      const group = svg.append("g");
+                                                      group.attr('id', 'color-legend');
+
+                                                      // shift legend to appropriate position
+                                                      group.attr('transform', translate(width - 220 - legendWidth - 30, 0));
+
+                                                      const title = group.append('text')
+                                                        .attr('class', 'axis-title')
+                                                        .text('Count of Current Material(Type) Being Used by Art Items');
+                                                        title.attr('dx', -143);
+                                                        title.attr('dy', 29);
+
+                                                      const legendLabelMin = group.append('text')
+                                                        .text('0')
+                                                        .attr('dx', -95)
+                                                        .attr('dy', 55);
+
+                                                      const legendLabelMax = group.append('text')
+                                                        .text('1458')
+                                                        .attr('dx', 135)
+                                                        .attr('dy', 55);
+
+                                                      // lets draw the rectangle, but it won't have a fill just yet
+                                                      const colorbox = group.append('rect')
+                                                        .attr('x', -75)
+                                                        .attr('y', 39)
+                                                        .attr('width', legendWidth)
+                                                        .attr('height', legendHeight)
+                                                        .style('stroke', 'silver');
+
+                                                      // get the domain first (we do not want the middle value from the diverging scale)
+                                                      const colorDomain = [d3.min(color.domain()), d3.max(color.domain())];
+                                              //        const color = d3.scaleSequential(d3.interpolateGnBu);
+
+                                              //        color.domain([0,235,471,706,942]);
+                                                      // add a new scale to go from color tick to percent
+                                                      percent = d3.scaleLinear()
+                                                        .range([0, 100])
+                                                        .domain(colorDomain);
+
+                                                      // we have to first add gradients
+                                                      const defs = svg.append('defs');
+
+                                                      // add a color stop per data tick
+                                                      // input  (ticks)   : [0.2, ..., 100, ..., 200.3]
+                                                      // output (percents): [  0, ..., 50, ..., 100]
+                                                      defs.append('linearGradient')
+                                                        .attr('id', 'gradient')
+                                                        .selectAll('stop')
+                                                        .data(color.ticks())
+                                                        .enter()
+                                                        .append('stop')
+                                                        .attr('offset', d => percent(d) + '%')
+                                                        .attr('stop-color', d => color(d));
+
+                                                      // draw the color rectangle with the gradient
+                                                      colorbox.attr('fill', 'url(#gradient)');
+
+
+                                                    }
 </script>
 
 

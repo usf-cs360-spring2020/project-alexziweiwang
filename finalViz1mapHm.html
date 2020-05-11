@@ -385,7 +385,7 @@ axis.y.tickPadding(0);
           ,"crockery", "grout", "basaltic clay", "glass mosaic tile", "gfrc tile", "tile", "glass mosaic", "laminated digital print", "polyurethane paint"]);
 
           const csvMat = "artcommision_categorized_material - Civic_Art_Collection.csv";
-          d3.csv(csvMat, recordMaterialInfo).then(makeHMDataFormat).then(drawAxis).then(drawHeatmap);
+          d3.csv(csvMat, recordMaterialInfo).then(makeHMDataFormat).then(drawAxis).then(drawHeatmap).then(drawColorLegend);
           d3.json(urls.basemap).then(function(json) {
             // makes sure to adjust projection to fit all of our regions
             projection.fitSize([960, 600], json);
@@ -1195,8 +1195,8 @@ function getTimeIntervalIndex(year) {
             .attr("id", "details")
             .attr("width", 500)
             .attr("height", 260)
-            .attr("x", 268)
-            .attr("y", 36);
+            .attr("x", 728)
+            .attr("y", 286);
 
           const body = details.append("xhtml:body")
             .style("text-align", "left")
@@ -1480,6 +1480,70 @@ function getTimeIntervalIndex(year) {
             });
 
           }
+
+          function drawColorLegend() {
+                 const legendWidth = 200;
+                 const legendHeight = 20;
+
+                 // place legend in its own group
+                 const group = svg.append("g");
+                 group.attr('id', 'color-legend');
+
+                 // shift legend to appropriate position
+                 group.attr('transform', translate(config.svg.width - config.margin.right - legendWidth - 30, config.margin.top - 10));
+
+                 const title = group.append('text')
+                   .attr('class', 'axis-title')
+                   .text('Count of Current Material Used in Current Time Range');
+                   title.attr('dx', -100);
+                   title.attr('dy', 576);
+
+                 const legendLabelMin = group.append('text')
+                   .text('0')
+                   .attr('dx', -45)
+                   .attr('dy', 602);
+
+                 const legendLabelMax = group.append('text')
+                   .text('357')
+                   .attr('dx', 185)
+                   .attr('dy', 602);
+
+                 // lets draw the rectangle, but it won't have a fill just yet
+                 const colorbox = group.append('rect')
+                   .attr('x', -25)
+                   .attr('y', 586)
+                   .attr('width', legendWidth)
+                   .attr('height', legendHeight)
+                   .style('stroke', 'silver');
+
+                 // get the domain first (we do not want the middle value from the diverging scale)
+                 const colorDomain = [d3.min(scale.color.domain()), d3.max(scale.color.domain())];
+
+                 // add a new scale to go from color tick to percent
+                 scale.percent = d3.scaleLinear()
+                   .range([0, 100])
+                   .domain(colorDomain);
+
+                 // we have to first add gradients
+                 const defs = svg.append('defs');
+
+                 // add a color stop per data tick
+                 // input  (ticks)   : [0.2, ..., 100, ..., 200.3]
+                 // output (percents): [  0, ..., 50, ..., 100]
+                 defs.append('linearGradient')
+                   .attr('id', 'gradient')
+                   .selectAll('stop')
+                   .data(scale.color.ticks())
+                   .enter()
+                   .append('stop')
+                   .attr('offset', d => scale.percent(d) + '%')
+                   .attr('stop-color', d => scale.color(d));
+
+                 // draw the color rectangle with the gradient
+                 colorbox.attr('fill', 'url(#gradient)');
+
+
+               }
 
           function translate(x, y) {
             return "translate(" + String(x) + "," + String(y) + ")";
