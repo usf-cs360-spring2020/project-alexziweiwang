@@ -16,6 +16,10 @@
 
     <style>
 
+  #symbolList {
+    overflow-y: scroll;
+  }
+
   #ResetButton {
     font-size: 12px;
   }
@@ -185,6 +189,7 @@
             <g id="artItems"></g>
             <g id="tooltip" pointer-events="none"></g>
             <g id="details" pointer-events="none"></g>
+
           </svg>
 
           <figcaption>
@@ -894,13 +899,12 @@
                                        .attr("x", 268)
                                        .attr("y", 36);
 
-                                     const body = details.append("xhtml:body")
+                                     const bodyDT = details.append("xhtml:body")
                                        .style("text-align", "left")
                                        .style("background", "none")
                                        .html("<p>N/A</p>");
 
                                      details.style("visibility", "hidden");
-
                                      // setup projection
                                      // https://github.com/d3/d3-geo#geoConicEqualArea
                                      const projection = d3.geoConicEqualArea();
@@ -912,6 +916,7 @@
 
                                      function drawBasemap(json) {
                                        console.log("basemap", json);
+                                       jsonInputArray = [];
 
                                        const basemap = g.basemap.selectAll("path.land")
                                          .data(json.features)
@@ -1008,7 +1013,7 @@
 
                                          jsonInputArray.push({
                                            'Display Title': d.display_title,
-                                           'Artist:': d.artist,
+                                           'Artist': d.artist,
                                            'Completion Year': d.creation_date,
                                            'Accession Number': d.accession_number,
                                            'Medium Detail': d.medium,
@@ -1046,46 +1051,73 @@
                                          .style("fill", "#e6b800");
                                  //      symbols.filter(d => (acsSet.has(d.AccessionNumber))).style("fill", "pink");
                                  //      console.log(d.AccessionNumber);
+                                 //      <g id="symbolList" pointer-events="none"></g>
 
-                                 symbolChosen = false;
+
                                  symbols.on("click", function(d) {
-                                     symbols.style("fill", "#e6b800");
 
-                                     if(symbolChosen == false) {
                                        console.log('clicking symbol... ' + d.latitude + ", " + d.longitude);
                                        len = jsonInputArray.length;
+                                       console.log('jsonInputArray');
+                                       console.log(jsonInputArray);
+                                       let resultSet = new Set();
+
                                        let chosenSymbolList = [];
                                        for(i=0;i<len;i++) {
-                                         if(jsonInputArray [i]['Latitude'] == d.latitude
-                                         && jsonInputArray [i]['Longitude'] == d.longitude) {
+                                         if(jsonInputArray[i]['Latitude'] == d.latitude
+                                         && jsonInputArray[i]['Longitude'] == d.longitude
+                                         && !resultSet.has(jsonInputArray[i]['Accession Number'])) {
 
-                                           console.log('clicking symbol... ' + jsonInputArray [i]['Latitude']
-                                           + ", " + jsonInputArray [i]['Longitude']);
+                                           resultSet.add(jsonInputArray[i]['Accession Number']);
                                            chosenSymbolList.push({
-                                             'Display Title': jsonInputArray [i]['display_title'],
-                                             'Artist:': jsonInputArray [i]['artist'],
-                                             'Completion Year': jsonInputArray [i]['creation_date'],
-                                             'Accession Number': jsonInputArray [i]['accession_number'],
-                                             'Medium Detail': jsonInputArray [i]['medium']
+                                             'Display Title': jsonInputArray[i]['Display Title'],
+                                             'Artist': jsonInputArray[i]['Artist'],
+                                             'Completion Year': jsonInputArray[i]['Completion Year'],
+                                             'Accession Number': jsonInputArray[i]['Accession Number'],
+                                             'Medium Detail': jsonInputArray[i]['Medium Detail']
                                            })
                                          }
                                        }
                                        console.log('chosenSymbolList: ');
                                        console.log(chosenSymbolList);
-                                       //TODO chosenSymbolList
-                                       //TODO to display!!
-                             /*          symbols.filter(e => (acsSet.has(e.AccessionNumber))).style("fill", "pink");
-                                       if(acsSet.has(d.AccessionNumber)) {
-                                         console.log("???");
-                                       }
-                     */
+                                       //chosenSymbolList display!!
 
+                                       htmlSymbolItemList = `
+                                       <title> Art Items at ${d.latitude}, ${d.longitude}</title>
+                                       <div style="overflow:auto">
+                                         <table border="0" cellspacing="0" cellpadding="2"  style="height: 200px">
+                                         <tbody>
+                                         <tr>
+                                            <th>Display Title  </th>
+                                            <th>Artist  </th>
+                                            <th>Completion Year  </th>
+                                            <th>Medium Detail  </th>
+                                            <th>Accession Number  </th>
+                                        </tr>`;
+
+                                      for(j=0;j<chosenSymbolList.length;j++) {
+                                        rowInfo = `<tr>
+                                          <td>${chosenSymbolList[j][['Display Title']]}  </td>
+                                          <td>${chosenSymbolList[j]['Artist']}  </td>
+                                          <td>${chosenSymbolList[j]['Completion Year']}  </td>
+                                          <td>${chosenSymbolList[j]['Medium Detail']}  </td>
+                                          <td>${chosenSymbolList[j]['Accession Number']}  </td>
+                                        </tr>`;
+                                        htmlSymbolItemList = htmlSymbolItemList + rowInfo;
+                                      }
+
+
+                                      htmlSymbolItemList = htmlSymbolItemList
+                                      +` </tbody>
+                                       </table>
+                                       </div>`;
+                                       console.log(htmlSymbolItemList);
+
+                                       var win = window.open("", "", "toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=980,height=300,top="+(screen.height-400)+",left="+(screen.width-840));
+                                       win.document.body.innerHTML = htmlSymbolItemList;
 
                                        symbolChosen = true;
-                                     } else {
-                                       symbols.style("fill", "#e6b800");
-                                       symbolChosen = false;
-                                     }
+
                                  });
                                  //TODO symbols clicked? show table of all art items in the "detail" table area?
 
@@ -1109,7 +1141,7 @@
 
                                          // use template literal for the detail table
                                          // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals
-                                         const html = `
+                                         const htmlSymbolDetail = `
                                            <table border="0" cellspacing="0" cellpadding="2">
                                            <tbody>
                                            <tr>
@@ -1126,7 +1158,7 @@
                                          </tbody>
                                          </table>`;
 
-                                         body.html(html);
+                                         bodyDT.html(htmlSymbolDetail);
                                          details.style("visibility", "visible");
                                        });
 

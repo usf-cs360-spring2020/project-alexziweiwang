@@ -185,6 +185,7 @@
             <g id="artItems"></g>
             <g id="tooltip" pointer-events="none"></g>
             <g id="details" pointer-events="none"></g>
+
           </svg>
           <p font-size = "30px">
               <button id="ResetButton" onclick="restButtonClicker()">reset</button>
@@ -1214,6 +1215,7 @@ function getTimeIntervalIndex(year) {
           const path = d3.geoPath().projection(projection);
 
           function drawBasemap(json) {
+            jsonInputArray = [];
             console.log("basemap", json);
 
             const basemap = g.basemap.selectAll("path.land")
@@ -1320,7 +1322,7 @@ function getTimeIntervalIndex(year) {
               }
               jsonInputArray.push({
                 'Display Title': d.display_title,
-                'Artist:': d.artist,
+                'Artist': d.artist,
                 'Completion Year': d.creation_date,
                 'Accession Number': d.accession_number,
                 'Medium Detail': d.medium,
@@ -1364,48 +1366,70 @@ function getTimeIntervalIndex(year) {
       //      console.log(d.AccessionNumber);
 
 
+      symbols.on("click", function(d) {
 
-            symbolChosen = false;
-            symbols.on("click", function(d) {
-                symbols.style("fill", "#e6b800");
+            console.log('clicking symbol... ' + d.latitude + ", " + d.longitude);
+            len = jsonInputArray.length;
+            console.log('jsonInputArray');
+            console.log(jsonInputArray);
+            let resultSet = new Set();
 
-                if(symbolChosen == false) {
-                  console.log('clicking symbol... ' + d.latitude + ", " + d.longitude);
-                  len = jsonInputArray.length;
-                  let chosenSymbolList = [];
-                  for(i=0;i<len;i++) {
-                    if(jsonInputArray [i]['Latitude'] == d.latitude
-                    && jsonInputArray [i]['Longitude'] == d.longitude) {
+            let chosenSymbolList = [];
+            for(i=0;i<len;i++) {
+              if(jsonInputArray[i]['Latitude'] == d.latitude
+              && jsonInputArray[i]['Longitude'] == d.longitude
+              && !resultSet.has(jsonInputArray[i]['Accession Number'])) {
 
-                      console.log('clicking symbol... ' + jsonInputArray [i]['Latitude']
-                      + ", " + jsonInputArray [i]['Longitude']);
-                      chosenSymbolList.push({
-                        'Display Title': jsonInputArray [i]['display_title'],
-                        'Artist:': jsonInputArray [i]['artist'],
-                        'Completion Year': jsonInputArray [i]['creation_date'],
-                        'Accession Number': jsonInputArray [i]['accession_number'],
-                        'Medium Detail': jsonInputArray [i]['medium']
-                      })
-                    }
-                  }
-                  console.log('chosenSymbolList: ');
-                  console.log(chosenSymbolList);
-                  //TODO chosenSymbolList
-                  //TODO to display!!
-        /*          symbols.filter(e => (acsSet.has(e.AccessionNumber))).style("fill", "pink");
-                  if(acsSet.has(d.AccessionNumber)) {
-                    console.log("???");
-                  }
-*/
+                resultSet.add(jsonInputArray[i]['Accession Number']);
+                chosenSymbolList.push({
+                  'Display Title': jsonInputArray[i]['Display Title'],
+                  'Artist': jsonInputArray[i]['Artist'],
+                  'Completion Year': jsonInputArray[i]['Completion Year'],
+                  'Accession Number': jsonInputArray[i]['Accession Number'],
+                  'Medium Detail': jsonInputArray[i]['Medium Detail']
+                })
+              }
+            }
+            console.log('chosenSymbolList: ');
+            console.log(chosenSymbolList);
+            //chosenSymbolList display!!
+
+            htmlSymbolItemList = `
+            <title> Art Items at ${d.latitude}, ${d.longitude}</title>
+            <div style="overflow:auto">
+              <table border="0" cellspacing="0" cellpadding="2"  style="height: 200px">
+              <tbody>
+              <tr>
+                 <th>Display Title  </th>
+                 <th>Artist  </th>
+                 <th>Completion Year  </th>
+                 <th>Medium Detail  </th>
+                 <th>Accession Number  </th>
+             </tr>`;
+
+           for(j=0;j<chosenSymbolList.length;j++) {
+             rowInfo = `<tr>
+               <td>${chosenSymbolList[j][['Display Title']]}  </td>
+               <td>${chosenSymbolList[j]['Artist']}  </td>
+               <td>${chosenSymbolList[j]['Completion Year']}  </td>
+               <td>${chosenSymbolList[j]['Medium Detail']}  </td>
+               <td>${chosenSymbolList[j]['Accession Number']}  </td>
+             </tr>`;
+             htmlSymbolItemList = htmlSymbolItemList + rowInfo;
+           }
 
 
-                  symbolChosen = true;
-                } else {
-                  symbols.style("fill", "#e6b800");
-                  symbolChosen = false;
-                }
-            });
+           htmlSymbolItemList = htmlSymbolItemList
+           +` </tbody>
+            </table>
+            </div>`;
 
+            var win = window.open("", "", "toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=980,height=300,top="+(screen.height-400)+",left="+(screen.width-840));
+            win.document.body.innerHTML = htmlSymbolItemList;
+
+            symbolChosen = true;
+
+      });
 //TODO symbols clicked? show table of all art items in the "detail" table area?
 
 
@@ -1428,14 +1452,14 @@ function getTimeIntervalIndex(year) {
 
               // use template literal for the detail table
               // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals
-              const html = `
+              htmlSymbolDetail = `
                 <table border="0" cellspacing="0" cellpadding="2">
                 <tbody>
                 <tr>
                   <th>Latitude, Longitude:</th>
                   <td>${d.latitude}, ${d.longitude}</td>
-                </tr>
-
+                </tr>`;
+              htmlSymbolDetail  = htmlSymbolDetail +`
                 <tr>
                   <th>Count of Art Item(s):</th>
                   <td>${caseCount}</td>
@@ -1445,7 +1469,7 @@ function getTimeIntervalIndex(year) {
               </tbody>
               </table>`;
 
-              body.html(html);
+              body.html(htmlSymbolDetail);
               details.style("visibility", "visible");
             });
 
