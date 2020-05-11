@@ -1049,7 +1049,6 @@
                                  //      console.log(d.AccessionNumber);
                                  //      <g id="symbolList" pointer-events="none"></g>
 
-
                                  symbols.on("click", function(d) {
 
                                        console.log('clicking symbol... ' + d.latitude + ", " + d.longitude);
@@ -1059,10 +1058,14 @@
                                        let resultSet = new Set();
 
                                        let chosenSymbolList = [];
+                                       console.log('chosenSymbolList: ');
+                                       console.log(chosenSymbolList);
+
                                        for(i=0;i<len;i++) {
                                          if(jsonInputArray[i]['Latitude'] == d.latitude
                                          && jsonInputArray[i]['Longitude'] == d.longitude
-                                         && !resultSet.has(jsonInputArray[i]['Accession Number'])) {
+                                         && !resultSet.has(jsonInputArray[i]['Accession Number'])
+                                         && acsSet.has(jsonInputArray[i]['Accession Number'])) {
 
                                            resultSet.add(jsonInputArray[i]['Accession Number']);
                                            chosenSymbolList.push({
@@ -1107,7 +1110,6 @@
                                       +` </tbody>
                                        </table>
                                        </div>`;
-                                       console.log(htmlSymbolItemList);
 
                                        var win = window.open("", "", "toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,width=980,height=300,top="+(screen.height-400)+",left="+(screen.width-840));
                                        win.document.body.innerHTML = htmlSymbolItemList;
