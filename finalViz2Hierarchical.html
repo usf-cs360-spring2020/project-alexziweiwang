@@ -710,9 +710,6 @@
 
                             d3.json(urls.artItems).then(drawArtItems);
 
-                            //TODO one category chosen...
-
-
                           });
 
                                selection.on('mouseover.highlight', function(d) {
@@ -774,9 +771,6 @@
 
                                        let text = `${name}`;
 
-
-
-
                                        // create tooltip
                                        let tooltip = g.append('text')
                                          .text(text)
@@ -785,7 +779,8 @@
                                          .attr('dy', -dy - 4) // shift upward above circle
                                          .attr('text-anchor', 'middle') // anchor in the middle
                                          .attr('id', 'tooltip')
-                                         .style('stroke','orange');
+                                         .style('fill','#e68a00')
+                                         .style('font-size', '22px');
 
                                        // it is possible the tooltip will fall off the edge of the
                                        // plot area. we can detect when this happens, and set the
