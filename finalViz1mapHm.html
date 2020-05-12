@@ -1581,7 +1581,7 @@ function getTimeIntervalIndex(year) {
       <p>On the proportional symbol map, the symbols are the locations of art items. Since there are sometimes multiple artworks at the same place, the count of art items is encoded with the size of the circle. Larger size of the circle symbol means more count of art items in that location. For the heat map, the x-axis is the time intervals from earlier to recent, and the y-axis are 6 types of materials used on art items. The color on the heatmap represents how many times that material was used. As shown in the legend, the more dark purple of a block means more counts of being used. </p>
 
       <h3> Interactivity</h3>
-      <p> There are two drop down lists that work as filtering options, so after pressing the “check..” button, only the art items that fit the requirement would remain on the map. Also the heatmap would help as a chooser that can change values in drop down list: hover a block on heatmap to see how many time that material was used in that range of time, and click one block to change the value in drop down lists, then click the “check..” button to see the filtered results. There is also a reset button, press “reset” and “check...” to resume the map that contains all symbols. For the symbol map, hover the mouse to see how many art items are in that location, and click a symbol to get a pop up window for a table of information of artworks on that location.</p>
+      <p> There are two drop down lists that work as filtering options, so after pressing the “check art items on the map” button, only the art items that fit the requirement would remain on the map. Also the heatmap would help as a chooser that can change values in drop down lists: hover a block on heatmap to see how many time that material was used in that range of time, and click one block to change the value in drop down lists, then click the “check art items on the map” button to see the filtered results. There is also a reset button, press “reset” and then press “check art items on the map” to resume the map that contains all symbols. For the symbol map, hover the mouse to see how many art items are in that location, and click a symbol to get a pop up window for a table of information of artworks on that location in the query range.</p>
 
       <h3>Findings </h3>
       <p> <strong>Question: </strong> How is the distribution of artworks in terms of material type and over time? (Is there any trend or pattern?) </br>
@@ -1589,6 +1589,11 @@ function getTimeIntervalIndex(year) {
        </p>
 
 
+      <h3> Data Wrangling</h3>
+      <p> For the generation of heatmap, when reading through the .csv file row by row, a map would be created to keep the records of raw data such as creation year, artist, medium, latitude, and longitude; then the counts as color encoding on heatmap would be implemented according to frequency of occurence in each range.
+        For the classification of material types, all mediums of each art item would be splited up and form an array(since in most case there are multiple materials used in one art item), and each material as key in a map, could aggregate count of occurence in the art items. There are 6 main types of materials, and there is a map keeps records of counts for each material type, and an array of subtypes under it.
+      Moreover, for the filtering on map visualization, the latitude + longitude would also work as keys in a map that keeps locations, to record information of all the art items at the same location.
+      There is also an array works as a plain table for arbitrary query on original data without any requirement on information of current key-value pairs.</p>
 
       </div>
       <!-- End page content -->

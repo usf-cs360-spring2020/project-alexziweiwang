@@ -1314,7 +1314,7 @@
 
 <h3> Interactivity</h3>
 <p> For the node-link diagram, hover each node to see the material type name and its count of being used. Clicking a node can filter the symbols on the map to only show art items that fit in the type specified on that node. To resume the overall view, click the root node.
-For the symbol map, hover the mouse on a symbol to see how many art items are in that location, and click a symbol to get a pop up window for a table of information of artworks on that location.
+For the symbol map, hover the mouse on a symbol to see how many art items are in that location, and click a symbol to get a pop up window for a table of information of artworks on that location in that query range.
 
 </p>
 
@@ -1325,6 +1325,14 @@ For the symbol map, hover the mouse on a symbol to see how many art items are in
  </br>
   <strong>Answer: </strong>  As in the node-link diagram, there are over 100 of subtypes in total under those 6 main types, such as steel and bronze under metal, and clay, glass and porcelain under kiln product. We can see that the traditional materials like bronze or concrete were used a lot in artworks, but there are also some daily life objects that were surprisingly used in the art items. For example, cables and egg tempera were mediums of some of the artworks. This visualization conveys some fun facts especially for people who are not experts on art, also the symbol map actually provides the information about where to look at those novel artworks.
  </p>
+
+
+ <h3> Data Wrangling</h3>
+ <p> For the classification of material types, all mediums of each art item would be splited up and form an array(since in most case there are multiple materials used in one art item), and each material as key in a map, could aggregate count of occurence in the art items. There are 6 main types of materials, and there is a map keeps records of counts for each material type, and an array of subtypes under it.
+  To form the hierarchical data structure, each type and subtype would be recorded as node names into an array, with the root as material type's parent node, and mateiral type as subtype's parent nodes. With d3.stratify() on this array, hierarchical data structure would be formed.
+  Moreover, for the filtering on map visualization, the latitude + longitude would also work as keys in a map that keeps locations, to record information of all the art items at the same location.
+  There is also an array works as a plain table for arbitrary query on original data without any requirement on information of current key-value pairs.</p>
+
       </div>
       <!-- End page content -->
     </div>
