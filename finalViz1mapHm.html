@@ -1201,7 +1201,7 @@ function getTimeIntervalIndex(year) {
             .attr("width", 500)
             .attr("height", 260)
             .attr("x", 728)
-            .attr("y", 286);
+            .attr("y", 206);
 
           const body = details.append("xhtml:body")
             .style("text-align", "left")
@@ -1332,7 +1332,8 @@ function getTimeIntervalIndex(year) {
                 'Accession Number': d.accession_number,
                 'Medium Detail': d.medium,
                 'Latitude': d.latitude,
-                'Longitude': d.longitude
+                'Longitude': d.longitude,
+                'Address': d.street_address
               })
 
 
@@ -1404,7 +1405,7 @@ function getTimeIntervalIndex(year) {
             //chosenSymbolList display!!
 
             htmlSymbolItemList = `
-            <title> Art Items at ${d.latitude}, ${d.longitude}</title>
+            <title> Art Items at ${d.street_address}</title>
             <div style="overflow:auto">
               <table border="0" cellspacing="0" cellpadding="2"  style="height: 200px">
               <tbody>
@@ -1464,15 +1465,25 @@ function getTimeIntervalIndex(year) {
                 <table border="0" cellspacing="0" cellpadding="2">
                 <tbody>
                 <tr>
-                  <th>Latitude, Longitude:</th>
-                  <td>${d.latitude}, ${d.longitude}</td>
-                </tr>`;
-              htmlSymbolDetail  = htmlSymbolDetail +`
-                <tr>
                   <th>Count of Art Item(s):</th>
                   <td>${caseCount}</td>
                 </tr>
+                <tr>
+                  <th>Address:</th>
+                  <td>${d.street_address}</td>
+                </tr>
+                <tr>
+                  <th>Location Description:</th>
+                  <td>${d.location_description}</td>
+                </tr>
+                <tr>
+                  <th>Latitude, Longitude:</th>
+                  <td>${d.latitude}, ${d.longitude}</td>
+                </tr>
 
+
+                `;
+              htmlSymbolDetail  = htmlSymbolDetail +`
 
               </tbody>
               </table>`;
@@ -1578,10 +1589,10 @@ function getTimeIntervalIndex(year) {
 </script>
 
       <h3> Encoding</h3>
-      <p>On the proportional symbol map, the symbols are the locations of art items. Since there are sometimes multiple artworks at the same place, the count of art items is encoded with the size of the circle. Larger size of the circle symbol means more count of art items in that location. For the heat map, the x-axis is the time intervals from earlier to recent, and the y-axis are 6 types of materials used on art items. The color on the heatmap represents how many times that material was used. As shown in the legend, the more dark purple of a block means more counts of being used. </p>
+      <p>On the proportional symbol map, the symbols are the locations of art items. Since sometimes there are multiple artworks at the same place, the count of art items is encoded by the size of the circle. Larger size of the circle symbol means more count of art items in that location. For the heat map, the x-axis is the time intervals from earlier to recent, and the y-axis are 6 types of materials used on art items. The color on the heatmap represents how many times that material was used. As shown in the legend, the more dark purple of a block means more counts of being used. </p>
 
       <h3> Interactivity</h3>
-      <p> There are two drop down lists that work as filtering options, so after pressing the “check art items on the map” button, only the art items that fit the requirement would remain on the map. Also the heatmap would help as a chooser that can change values in drop down lists: hover a block on heatmap to see how many time that material was used in that range of time, and click one block to change the value in drop down lists, then click the “check art items on the map” button to see the filtered results. There is also a reset button, press “reset” and then press “check art items on the map” to resume the map that contains all symbols. For the symbol map, hover the mouse to see how many art items are in that location, and click a symbol to get a pop up window for a table of information of artworks on that location in the query range.</p>
+      <p> There are two drop down lists that work as filtering options, so after pressing the “check art items on the map” button, only the art items that fit the requirement would remain on the map. Also the heatmap would help as a chooser that can change values in drop down lists: hover a block on heatmap to see how many time that material was used in that range of time, and click one block to change the value in drop down lists, then click the “check art items on the map” button to see the filtered results. There is also a reset button, press “reset” and then press “check art items on the map” to resume the map that contains all symbols. For the symbol map, hover on a symbol to see how many art items are in that location, and click a symbol to get a pop up window for a table of information of artworks on that location in the query range.</p>
 
       <h3>Findings </h3>
       <p> <strong>Question: </strong> How is the distribution of artworks in terms of material type and over time? (Is there any trend or pattern?) </br>

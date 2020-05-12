@@ -206,7 +206,7 @@
 
 
     const width = 1440;
-    const height = 600;
+    const height = 800;
 
 
     // setup svg
@@ -923,12 +923,12 @@
                                      // https://bl.ocks.org/mbostock/1424037
                                      const details = g.details.append("foreignObject")
                                        .attr("id", "details")
-                                       .attr("width", 500)
+                                       .attr("width", 1100)
                                        .attr("height", 260)
-                                       .attr("x", 268)
-                                       .attr("y", 36);
+                                       .attr("x", 168)
+                                       .attr("y", 600);
 
-                                     const bodyDT = details.append("xhtml:body")
+                                     const body = details.append("xhtml:body")
                                        .style("text-align", "left")
                                        .style("background", "none")
                                        .html("<p>N/A</p>");
@@ -1120,7 +1120,7 @@
                                        //chosenSymbolList display!!
 
                                        htmlSymbolItemList = `
-                                       <title> Art Items at ${d.latitude}, ${d.longitude}</title>
+                                       <title> Art Items at ${d.street_address}</title>
                                        <div style="overflow:auto">
                                          <table border="0" cellspacing="0" cellpadding="2"  style="height: 200px">
                                          <tbody>
@@ -1176,24 +1176,32 @@
 
                                          // use template literal for the detail table
                                          // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals
-                                         const htmlSymbolDetail = `
+                                         htmlSymbolDetail = `
                                            <table border="0" cellspacing="0" cellpadding="2">
                                            <tbody>
-                                           <tr>
-                                             <th>Latitude, Longitude:</th>
-                                             <td>${d.latitude}, ${d.longitude}</td>
-                                           </tr>
-
                                            <tr>
                                              <th>Count of Art Item(s):</th>
                                              <td>${caseCount}</td>
                                            </tr>
+                                           <tr>
+                                             <th>Address:</th>
+                                             <td>${d.street_address}</td>
 
+                                             <th>Location Description:</th>
+                                             <td>${d.location_description}</td>
+
+                                             <th>Latitude, Longitude:</th>
+                                             <td>${d.latitude}, ${d.longitude}</td>
+                                           </tr>
+
+
+                                           `;
+                                         htmlSymbolDetail  = htmlSymbolDetail +`
 
                                          </tbody>
                                          </table>`;
 
-                                         bodyDT.html(htmlSymbolDetail);
+                                         body.html(htmlSymbolDetail);
                                          details.style("visibility", "visible");
                                        });
 
@@ -1309,12 +1317,12 @@
 
 
 <h3> Encoding</h3>
-<p>On the proportional symbol map, the symbols are the locations of art items. Since there are sometimes multiple artworks at the same place, the count of art items is encoded with the size of the circle. Larger size of the circle symbol means more count of art items in that location. For the node-link diagram, the second layer of nodes under root are the same set of types as in the heatmap, and there are more specific subtypes under these 6 main types. The color on those nodes represents how many that type of material used, that darker blue means more time of using.
+<p>On the proportional symbol map, the symbols are the locations of art items. Since sometimes there are multiple artworks at the same place, the count of art items is encoded by the size of the circle. Larger size of the circle symbol means more count of art items in that location. For the node-link diagram, the second layer of nodes under root are the same set of types as in the heatmap, and there are more specific subtypes under these 6 main types. The color on those nodes represents how many that type of material used, that darker blue means more time of using.
 </p>
 
 <h3> Interactivity</h3>
 <p> For the node-link diagram, hover each node to see the material type name and its count of being used. Clicking a node can filter the symbols on the map to only show art items that fit in the type specified on that node. To resume the overall view, click the root node.
-For the symbol map, hover the mouse on a symbol to see how many art items are in that location, and click a symbol to get a pop up window for a table of information of artworks on that location in that query range.
+For the symbol map, hover on a symbol to see how many art items are in that location, and click a symbol to get a pop up window for a table of information of artworks on that location in that query range.
 
 </p>
 
