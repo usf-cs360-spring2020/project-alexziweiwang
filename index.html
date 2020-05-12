@@ -16,8 +16,25 @@
     <style>
 body {background-color:  #F9F2F5;
 }
+.hero-image {
+  /* Use "linear-gradient" to add a darken background effect to the image (photographer.jpg). This will make the text easier to read */
+  background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(1, 0, 0, 0)), url("IMG_38562.JPG");
 
+  /* Position and center the image to scale nicely on all screens */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  position: relative;
+}
 
+.title {
+
+color: white;
+}
+
+.subtitle {
+color: white;
+}
     </style>
   </head>
 
@@ -25,7 +42,7 @@ body {background-color:  #F9F2F5;
 
   <!-- Page header -->
   <!-- https://bulma.io/documentation/layout/hero/ -->
-  <section class="hero is-light is-bold" background="palevioletred">
+  <section class="hero-image">
     <div class="hero-body">
       <div class="container">
         <h1 class="title">Final Project: Civic Art Collection in San Francisco</h1>
@@ -126,7 +143,7 @@ San Francisco has been a beautiful city not only with its natural views, but als
           Inspiration of hierarchical data visualization: <a href= "https://observablehq.com/@sjengle/java-11-api-hierarchy-visualization" target = _blank>Java 11 API Hierarchy - Visualization </a></br>
           Inspiration of geospatial data visualizaton: <a href= "https://blockbuilder.org/sjengle/1d673a35f2cb304c572a137277d3d150" target = _blank> Template of Lab - Maps</a> </br>
           Inspiration of heatmap: <a href = "https://blockbuilder.org/sjengle/47c5c20a18ec29f4e2b82905bdb7fe95" target = _blank>Zillow Affordability Heatmap</a> </p>
-
+          <p><i> About images used in headers: except the hero-image for About Page was retrieved <a href = "https://www.itl.cat/wallview/imJRTT_harry-potter-slytherin-wallpaper-hd-harry-potter-wallpaper/" target = _blank>here</a>, all other pictures are taken by Alex Wang.</i></p>
       </div>
       <!-- End page content -->
     </div>

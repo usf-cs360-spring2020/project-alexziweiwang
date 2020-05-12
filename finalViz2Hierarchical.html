@@ -85,7 +85,25 @@
  <style>
  body {background-color:  #FEF8F4;
  }
+ .hero-image {
+   /* Use "linear-gradient" to add a darken background effect to the image (photographer.jpg). This will make the text easier to read */
+   background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url("IMG_3854.JPG");
 
+   /* Position and center the image to scale nicely on all screens */
+   background-position: center;
+   background-repeat: no-repeat;
+   background-size: cover;
+   position: relative;
+ }
+
+ .title {
+
+ color: white;
+ }
+
+ .subtitle {
+ color: white;
+ }
 
  </style>
 
@@ -95,10 +113,10 @@
 
   <!-- Page header -->
   <!-- https://bulma.io/documentation/layout/hero/ -->
-  <section class="hero is-light is-bold">
+  <section class="hero-image">
     <div class="hero-body">
       <div class="container">
-        <h1 class="title">Final Visualization 2: Hierarchical Relationship - Types of Materials Used on Art Items in San Francisco</h1>
+        <h1 class="title">Final Visualization 2: </br>Hierarchical Relationship - Types of Materials Used on Art Items in San Francisco</h1>
         <h2 class="subtitle">Visualization in d3.js</h2>
       </div>
     </div>

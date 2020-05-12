@@ -15,6 +15,25 @@
 
 
     <style>
+    .hero-image {
+      /* Use "linear-gradient" to add a darken background effect to the image (photographer.jpg). This will make the text easier to read */
+      background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url("IMG_3857.JPG");
+
+      /* Position and center the image to scale nicely on all screens */
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      position: relative;
+    }
+
+    .title {
+
+    color: white;
+    }
+
+    .subtitle {
+    color: white;
+    }
   #tooltip {
     font-weight: 600;
     text-shadow: 0px 0px 2px white;
@@ -71,7 +90,7 @@ body {background-color: #EEF3F6;}
 
   <!-- Page header -->
   <!-- https://bulma.io/documentation/layout/hero/ -->
-  <section class="hero is-light is-bold">
+  <section class="hero-image">
     <div class="hero-body">
       <div class="container">
         <h1 class="title">Prototype Page - Beta : Clustering of Artists that Use Similar Materials?</h1>
