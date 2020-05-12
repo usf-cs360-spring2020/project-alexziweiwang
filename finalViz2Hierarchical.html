@@ -130,14 +130,15 @@
             </a>
 
             <div class="navbar-dropdown">
+
               <a class="navbar-item" href="pttpAlpha.html">
                 <span class="icon"><i class="fas fa-chart-line"></i></span>
-                <span>Prototype-Alpha: Materials in Art Items - Non-proportional Symbol Map in Tableau</span>
+                <span>Prototype-Alpha: Art Items on Map of San Francisco - Non-proportional Symbol Map in Tableau (with feedback)</span>
               </a>
 
               <a class="navbar-item" href="pttpBeta2.html">
                 <span class="icon"><i class="fas fa-chart-line"></i></span>
-                <span>Prototype-Beta-OverallMap: Distribution of Materials in Art Items - non-proportional symbol map in d3.js</span>
+                <span>Prototype-Beta-OverallMap:  Clustering of Artists that Use Similar Materials? - non-proportional symbol map in d3.js (with feedback)</span>
               </a>
 
               <a class="navbar-item" href="finalViz1mapHm.html">
@@ -147,7 +148,7 @@
 
               <a class="navbar-item" href="finalViz2Hierarchical.html">
                 <span class="icon"><i class="fas fa-chart-line"></i></span>
-                <span>Final Visualization 2: Hierarchical Relationship - Types of Materials Used on Art Items in San Francisco</span>
+                <span>Final Visualization 2: Hierarchical Relationship - Types of Materials Used on Art Items in San Francisco </span>
               </a>
 
 
@@ -1307,7 +1308,23 @@
 </script>
 
 
+<h3> Encoding</h3>
+<p>On the proportional symbol map, the symbols are the locations of art items. Since there are sometimes multiple artworks at the same place, the count of art items is encoded with the size of the circle. Larger size of the circle symbol means more count of art items in that location. For the node-link diagram, the second layer of nodes under root are the same set of types as in the heatmap, and there are more specific subtypes under these 6 main types. The color on those nodes represents how many that type of material used, that darker blue means more time of using.
+</p>
 
+<h3> Interactivity</h3>
+<p> For the node-link diagram, hover each node to see the material type name and its count of being used. Clicking a node can filter the symbols on the map to only show art items that fit in the type specified on that node. To resume the overall view, click the root node.
+For the symbol map, hover the mouse on a symbol to see how many art items are in that location, and click a symbol to get a pop up window for a table of information of artworks on that location.
+
+</p>
+
+
+<h3>Findings </h3>
+<p> <strong>Question: </strong> What is the relationship of these material types used in artworks? What more specific types of material are used and how frequently were they used?
+
+ </br>
+  <strong>Answer: </strong>  As in the node-link diagram, there are over 100 of subtypes in total under those 6 main types, such as steel and bronze under metal, and clay, glass and porcelain under kiln product. We can see that the traditional materials like bronze or concrete were used a lot in artworks, but there are also some daily life objects that were surprisingly used in the art items. For example, cables and egg tempera were mediums of some of the artworks. This visualization conveys some fun facts especially for people who are not experts on art, also the symbol map actually provides the information about where to look at those novel artworks.
+ </p>
       </div>
       <!-- End page content -->
     </div>

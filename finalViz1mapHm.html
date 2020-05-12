@@ -128,12 +128,12 @@
             <div class="navbar-dropdown">
               <a class="navbar-item" href="pttpAlpha.html">
                 <span class="icon"><i class="fas fa-chart-line"></i></span>
-                <span>Prototype-Alpha: Materials in Art Items - Non-proportional Symbol Map in Tableau</span>
+                <span>Prototype-Alpha: Art Items on Map of San Francisco - Non-proportional Symbol Map in Tableau (with feedback)</span>
               </a>
 
               <a class="navbar-item" href="pttpBeta2.html">
                 <span class="icon"><i class="fas fa-chart-line"></i></span>
-                <span>Prototype-Beta-OverallMap: Distribution of Materials in Art Items - non-proportional symbol map in d3.js</span>
+                <span>Prototype-Beta-OverallMap:  Clustering of Artists that Use Similar Materials? - non-proportional symbol map in d3.js (with feedback)</span>
               </a>
 
               <a class="navbar-item" href="finalViz1mapHm.html">
@@ -145,7 +145,6 @@
                 <span class="icon"><i class="fas fa-chart-line"></i></span>
                 <span>Final Visualization 2: Hierarchical Relationship - Types of Materials Used on Art Items in San Francisco </span>
               </a>
-
 
 
             </div>
@@ -1577,6 +1576,18 @@ function getTimeIntervalIndex(year) {
           }
 
 </script>
+
+      <h3> Encoding</h3>
+      <p>On the proportional symbol map, the symbols are the locations of art items. Since there are sometimes multiple artworks at the same place, the count of art items is encoded with the size of the circle. Larger size of the circle symbol means more count of art items in that location. For the heat map, the x-axis is the time intervals from earlier to recent, and the y-axis are 6 types of materials used on art items. The color on the heatmap represents how many times that material was used. As shown in the legend, the more dark purple of a block means more counts of being used. </p>
+
+      <h3> Interactivity</h3>
+      <p> There are two drop down lists that work as filtering options, so after pressing the “check..” button, only the art items that fit the requirement would remain on the map. Also the heatmap would help as a chooser that can change values in drop down list: hover a block on heatmap to see how many time that material was used in that range of time, and click one block to change the value in drop down lists, then click the “check..” button to see the filtered results. There is also a reset button, press “reset” and “check...” to resume the map that contains all symbols. For the symbol map, hover the mouse to see how many art items are in that location, and click a symbol to get a pop up window for a table of information of artworks on that location.</p>
+
+      <h3>Findings </h3>
+      <p> <strong>Question: </strong> How is the distribution of artworks in terms of material type and over time? (Is there any trend or pattern?) </br>
+        <strong>Answer: </strong> Artworks in this dataset were mostly created between the years of 1986-2010, and years close to that range. So we know that there are much more modern artworks than ancient art are on display in San Francisco. That actually surprised me because I’ve seen lots of ancient artworks in Asian Art Museum but it seems that those do not take up the major parts of the artworks in San Francisco.
+       </p>
+
 
 
       </div>
