@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Final Visualization 2: hierarchical relationship of types of materials in art items</title>
+    <title>Final Visualization 2: Hierarchical Relationship - Types of Materials Used on Art Items in San Francisco</title>
 
     <!-- Load Bulma from CDN (consider saving it to repository instead) -->
     <!-- https://bulma.io/ -->
@@ -92,7 +92,7 @@
   <section class="hero is-info is-bold">
     <div class="hero-body">
       <div class="container">
-        <h1 class="title">Final Visualization 2: hierarchical relationship of types of materials in art items</h1>
+        <h1 class="title">Final Visualization 2: Hierarchical Relationship - Types of Materials Used on Art Items in San Francisco</h1>
         <h2 class="subtitle">Visualization in d3.js</h2>
       </div>
     </div>
@@ -132,22 +132,22 @@
             <div class="navbar-dropdown">
               <a class="navbar-item" href="pttpAlpha.html">
                 <span class="icon"><i class="fas fa-chart-line"></i></span>
-                <span>Prototype-Alpha: non-proportional symbol map in Tableau</span>
+                <span>Prototype-Alpha: Materials in Art Items - Non-proportional Symbol Map in Tableau</span>
               </a>
 
               <a class="navbar-item" href="pttpBeta2.html">
                 <span class="icon"><i class="fas fa-chart-line"></i></span>
-                <span>Prototype-Beta-OverallMap: non-proportional symbol map in d3.js</span>
+                <span>Prototype-Beta-OverallMap: Distribution of Materials in Art Items - non-proportional symbol map in d3.js</span>
               </a>
 
               <a class="navbar-item" href="finalViz1mapHm.html">
                 <span class="icon"><i class="fas fa-chart-line"></i></span>
-                <span>Final Visualization 1: historial and geospatial distribution of materials in art items</span>
+                <span>Final Visualization 1: Distribution Over Time - Materials Used on Art Items in San Francisco</span>
               </a>
 
               <a class="navbar-item" href="finalViz2Hierarchical.html">
                 <span class="icon"><i class="fas fa-chart-line"></i></span>
-                <span>Final Visualization 2: hierarchical relationship of types of materials in art items</span>
+                <span>Final Visualization 2: Hierarchical Relationship - Types of Materials Used on Art Items in San Francisco</span>
               </a>
 
 
@@ -174,7 +174,7 @@
       <div class="content">
 
         <h1 class="title">
-          Visualization in d3.js
+          Proportional Symbol Map & Node-link Diagram
         </h1>
 
         <meta charset="utf-8">
@@ -594,6 +594,38 @@
 
 
                   function cirtree(data) {
+                    const graphTitle1 = g.artItems.append('text')
+                      .text('Hierarchical Relationship');
+                      graphTitle1.attr("id", 'graphTitle');
+                      graphTitle1.attr('dx', 20);
+                      graphTitle1.attr('dy', 100);
+                      graphTitle1.attr('font-size', '23px');
+
+                   const graphTitle2 = g.artItems.append('text')
+                     .text('of Materials Types Used on');
+                     graphTitle2.attr("id", 'graphTitle');
+                     graphTitle2.attr('dx', 20);
+                     graphTitle2.attr('dy', 130);
+                     graphTitle2.attr('font-size', '23px');
+
+                   const graphTitle3 = g.artItems.append('text')
+                     .text('Art Items in Range of ');
+                     graphTitle3.attr("id", 'graphTitle');
+                     graphTitle3.attr('dx', 20);
+                     graphTitle3.attr('dy', 160);
+                     graphTitle3.attr('font-size', '23px');
+
+                     const graphTitle5 = g.artItems.append('text')
+                       .text('San Francisco');
+                       graphTitle5.attr("id", 'graphTitle');
+                       graphTitle5.attr('dx', 20);
+                       graphTitle5.attr('dy', 190);
+                       graphTitle5.attr('font-size', '23px');
+
+
+
+
+
                         data.sort(function(a, b) {
                           return b.height - a.height || b.count - a.count;
                         });
@@ -768,8 +800,9 @@
                                        let datum = node.datum();
 
                                        let name = datum.data.name;
+                                       let count = datum.data.count;
 
-                                       let text = `${name}`;
+                                       let text = `${name}, ${count}`;
 
                                        // create tooltip
                                        let tooltip = g.append('text')
@@ -977,6 +1010,8 @@
                                      }
 
                                      function drawArtItems(json) {
+
+
                                        d3.selectAll("#allSymbols").remove();
                                        console.log('JSON for art items: ^^^^^^^^^^^^^^^^^^^');
                                        console.log(json);
@@ -1019,6 +1054,8 @@
                                        });
 
                                        // locMap[locString]    locString = row.Latitude + "&" + row.Longitude;   locAcsSet = locMap[locString]   locAcsSet.size
+
+
 
                                        const symbols = g.artItems.selectAll("circle")
                                          .data(json)
@@ -1117,7 +1154,6 @@
                                        symbolChosen = true;
 
                                  });
-                                 //TODO symbols clicked? show table of all art items in the "detail" table area?
 
 
                                        symbols.on("mouseover", function(d) {

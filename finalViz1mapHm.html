@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Final Visualization 1: Historial and Geospatial Distribution of Materials in Art Items</title>
+    <title>Final Visualization 1: Distribution Over Time - Materials Used on Art Items in San Francisco</title>
 
     <!-- Load Bulma from CDN (consider saving it to repository instead) -->
     <!-- https://bulma.io/ -->
@@ -88,7 +88,7 @@
   <section class="hero is-info is-bold">
     <div class="hero-body">
       <div class="container">
-        <h1 class="title">Final Visualization 1: Historial and Geospatial Distribution of Materials in Art Items</h1>
+        <h1 class="title">Final Visualization 1: Distribution Over Time - Materials Used on Art Items in San Francisco</h1>
         <h2 class="subtitle">Visualization in d3.js</h2>
       </div>
     </div>
@@ -128,22 +128,22 @@
             <div class="navbar-dropdown">
               <a class="navbar-item" href="pttpAlpha.html">
                 <span class="icon"><i class="fas fa-chart-line"></i></span>
-                <span>Prototype-Alpha: non-proportional symbol map in Tableau</span>
+                <span>Prototype-Alpha: Materials in Art Items - Non-proportional Symbol Map in Tableau</span>
               </a>
 
               <a class="navbar-item" href="pttpBeta2.html">
                 <span class="icon"><i class="fas fa-chart-line"></i></span>
-                <span>Prototype-Beta-OverallMap: non-proportional symbol map in d3.js</span>
+                <span>Prototype-Beta-OverallMap: Distribution of Materials in Art Items - non-proportional symbol map in d3.js</span>
               </a>
 
               <a class="navbar-item" href="finalViz1mapHm.html">
                 <span class="icon"><i class="fas fa-chart-line"></i></span>
-                <span>Final Visualization 1: historial and geospatial distribution of materials in art items</span>
+                <span>Final Visualization 1: Distribution Over Time - Materials Used on Art Items in San Francisco</span>
               </a>
 
               <a class="navbar-item" href="finalViz2Hierarchical.html">
                 <span class="icon"><i class="fas fa-chart-line"></i></span>
-                <span>Final Visualization 2: hierarchical relationship of types of materials in art items</span>
+                <span>Final Visualization 2: Hierarchical Relationship - Types of Materials Used on Art Items in San Francisco </span>
               </a>
 
 
@@ -170,7 +170,7 @@
       <div class="content">
 
         <h1 class="title">
-          Visualization in d3.js
+          Proportional Symbol Map & Heatmap
         </h1>
 
         <meta charset="utf-8">
@@ -957,6 +957,12 @@ function drawAxis(data) {
 
 
      function drawHeatmap(data) {
+       const graphTitle = g.artItems.append('text')
+         .text('Distribution Over Time of Materials Used on Art Items in San Francisco');
+         graphTitle.attr("id", 'graphTitle');
+         graphTitle.attr('dx', 20);
+         graphTitle.attr('dy', 75);
+         graphTitle.attr('font-size', '23px');
         //let typeName = ['architectural material', 'metal', 'mineral', 'ecological', 'daily life object', 'kiln product'];
 
         allValues = timeMap['architectural material'].concat(timeMap['metal'],
@@ -1434,7 +1440,6 @@ function getTimeIntervalIndex(year) {
             symbolChosen = true;
 
       });
-//TODO symbols clicked? show table of all art items in the "detail" table area?
 
 
             symbols.on("mouseover", function(d) {
